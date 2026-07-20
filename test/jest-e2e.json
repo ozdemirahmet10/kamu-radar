@@ -1,0 +1,17 @@
+{
+  "moduleFileExtensions": ["js", "json", "ts"],
+  "rootDir": "..",
+  "testEnvironment": "node",
+  "testRegex": "test/.*\\.e2e-spec\\.ts$",
+  "transform": {
+    "^.+\\.(t|j)s$": "ts-jest"
+  },
+  "testTimeout": 60000,
+  "moduleNameMapper": {
+    "^@app/shared-kernel(|/.*)$": "<rootDir>/libs/shared-kernel/src/$1",
+    "^@app/config(|/.*)$": "<rootDir>/libs/config/src/$1",
+    "^@app/logger(|/.*)$": "<rootDir>/libs/logger/src/$1",
+    "^@app/database(|/.*)$": "<rootDir>/libs/database/src/$1",
+    "^@app/email(|/.*)$": "<rootDir>/libs/email/src/$1"
+  }
+}

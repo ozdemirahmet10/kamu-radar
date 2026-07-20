@@ -1,0 +1,506 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==============================
+// Identity & Profile
+// ==============================
+
+enum UserRole {
+  USER
+  MODERATOR
+  ADMIN
+}
+
+model User {
+  id               String    @id @default(uuid())
+  email            String    @unique
+  phone            String?
+  passwordHash     String    @map("password_hash")
+  fullName         String    @map("full_name")
+  role             UserRole  @default(USER)
+  isEmailVerified  Boolean   @default(false) @map("is_email_verified")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+  deletedAt        DateTime? @map("deleted_at")
+  suspendedAt      DateTime? @map("suspended_at")
+
+  profile               UserProfile?
+  notificationPreferences NotificationPreference[]
+  matchResults          MatchResult[]
+  notificationLogs      NotificationLog[]
+  refreshTokens         RefreshToken[]
+  auditLogs             AuditLog[]
+  favorites             JobPostingFavorite[]
+  applications          JobApplication[]
+  verificationTokens    VerificationToken[]
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id         String    @id @default(uuid())
+  userId     String    @map("user_id")
+  tokenHash  String    @map("token_hash")
+  deviceInfo String?   @map("device_info")
+  expiresAt  DateTime  @map("expires_at")
+  revokedAt  DateTime? @map("revoked_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+enum VerificationTokenPurpose {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+}
+
+model VerificationToken {
+  id        String                   @id @default(uuid())
+  userId    String                   @map("user_id")
+  tokenHash String                   @unique @map("token_hash")
+  purpose   VerificationTokenPurpose
+  expiresAt DateTime                 @map("expires_at")
+  usedAt    DateTime?                @map("used_at")
+  createdAt DateTime                 @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, purpose])
+  @@map("verification_tokens")
+}
+
+enum MilitaryStatus {
+  YAPILDI
+  MUAF
+  TECILLI
+  YOK
+}
+
+enum DisabilityStatus {
+  YOK
+  VAR
+}
+
+model UserProfile {
+  id                     String            @id @default(uuid())
+  userId                 String            @unique @map("user_id")
+  birthDate              DateTime?         @map("birth_date")
+  educationLevel         EducationLevel?   @map("education_level")
+  graduationSchool       String?           @map("graduation_school")
+  graduationDepartmentId String?           @map("graduation_department_id")
+  kpssYear               Int?              @map("kpss_year")
+  kpssScoreType          String?           @map("kpss_score_type")
+  kpssScore              Float?            @map("kpss_score")
+  drivingLicense         Boolean           @default(false) @map("driving_license")
+  ydsScore               Float?            @map("yds_score")
+  ydsType                String?           @map("yds_type")
+  militaryStatus         MilitaryStatus?   @map("military_status")
+  disabilityStatus       DisabilityStatus? @default(YOK) @map("disability_status")
+  createdAt              DateTime          @default(now()) @map("created_at")
+  updatedAt              DateTime          @updatedAt @map("updated_at")
+
+  user                 User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  graduationDepartment GraduationDepartment?  @relation(fields: [graduationDepartmentId], references: [id])
+  certificates         UserCertificate[]
+  preferredCities      UserPreferredCity[]
+
+  @@map("user_profiles")
+}
+
+model GraduationDepartment {
+  id             String         @id @default(uuid())
+  name           String
+  educationLevel EducationLevel @map("education_level")
+  createdAt      DateTime       @default(now()) @map("created_at")
+
+  profiles UserProfile[]
+
+  @@unique([name, educationLevel])
+  @@index([educationLevel])
+  @@map("graduation_departments")
+}
+
+model QualificationCode {
+  id              String         @id @default(uuid())
+  code            String         @unique
+  description     String
+  educationLevel  EducationLevel @map("education_level")
+  departmentNames Json           @map("department_names")
+  isUniversal     Boolean        @default(false) @map("is_universal")
+
+  @@index([educationLevel])
+  @@map("qualification_codes")
+}
+
+model UserCertificate {
+  id             String    @id @default(uuid())
+  userProfileId  String    @map("user_profile_id")
+  certificateName String   @map("certificate_name")
+  issuedAt       DateTime? @map("issued_at")
+
+  userProfile UserProfile @relation(fields: [userProfileId], references: [id], onDelete: Cascade)
+
+  @@index([userProfileId])
+  @@map("user_certificates")
+}
+
+model UserPreferredCity {
+  id            String @id @default(uuid())
+  userProfileId String @map("user_profile_id")
+  cityId        String @map("city_id")
+
+  userProfile UserProfile @relation(fields: [userProfileId], references: [id], onDelete: Cascade)
+  city        City        @relation(fields: [cityId], references: [id])
+
+  @@unique([userProfileId, cityId])
+  @@map("user_preferred_cities")
+}
+
+model City {
+  id        String @id @default(uuid())
+  name      String @unique
+  plateCode Int    @unique @map("plate_code")
+
+  preferredByProfiles UserPreferredCity[]
+  jobPostings         JobPosting[]
+
+  @@map("cities")
+}
+
+enum NotificationChannel {
+  EMAIL
+  WEB_PUSH
+  MOBILE_PUSH
+  IN_APP
+}
+
+enum DigestFrequency {
+  INSTANT
+  DAILY
+}
+
+model NotificationPreference {
+  id              String              @id @default(uuid())
+  userId          String              @map("user_id")
+  channel         NotificationChannel
+  isEnabled       Boolean             @default(true) @map("is_enabled")
+  digestFrequency DigestFrequency     @default(INSTANT) @map("digest_frequency")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, channel])
+  @@map("notification_preferences")
+}
+
+// ==============================
+// Crawler
+// ==============================
+
+enum CrawlStatus {
+  SUCCESS
+  FAILED
+  PARTIAL
+}
+
+model CrawlSource {
+  id               String      @id @default(uuid())
+  name             String      @unique
+  baseUrl          String      @map("base_url")
+  adapterKey       String      @map("adapter_key")
+  crawlFrequencyCron String    @map("crawl_frequency_cron")
+  isActive         Boolean     @default(true) @map("is_active")
+  lastCrawledAt    DateTime?   @map("last_crawled_at")
+  lastStatus       CrawlStatus? @map("last_status")
+  createdAt        DateTime    @default(now()) @map("created_at")
+  updatedAt        DateTime    @updatedAt @map("updated_at")
+
+  crawlRuns   CrawlRun[]
+  jobPostings JobPosting[]
+
+  @@map("crawl_sources")
+}
+
+model CrawlRun {
+  id           String      @id @default(uuid())
+  sourceId     String      @map("source_id")
+  startedAt    DateTime    @default(now()) @map("started_at")
+  finishedAt   DateTime?   @map("finished_at")
+  status       CrawlStatus
+  itemsFound   Int         @default(0) @map("items_found")
+  itemsNew     Int         @default(0) @map("items_new")
+  errorMessage String?     @map("error_message")
+
+  source CrawlSource @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+
+  @@index([sourceId])
+  @@map("crawl_runs")
+}
+
+// ==============================
+// Job Catalog
+// ==============================
+
+enum JobPostingStatus {
+  DRAFT
+  PUBLISHED
+  EXPIRED
+  ARCHIVED
+  PENDING_REVIEW
+}
+
+enum InstitutionType {
+  BAKANLIK
+  BELEDIYE
+  UNIVERSITE
+  VALILIK
+  IL_MUDURLUGU
+  KAYMAKAMLIK
+  DIGER
+}
+
+enum EmploymentType {
+  SUREKLI_ISCI
+  MEMUR
+  SOZLESMELI_PERSONEL
+  GECICI_PERSONEL
+}
+
+enum EducationLevel {
+  ILKOGRETIM
+  LISE
+  ON_LISANS
+  LISANS
+  YUKSEK_LISANS
+}
+
+model JobPosting {
+  id                    String           @id @default(uuid())
+  sourceId              String           @map("source_id")
+  externalRef           String?          @map("external_ref")
+  fingerprintHash        String           @unique @map("fingerprint_hash")
+  institutionName       String           @map("institution_name")
+  institutionType       InstitutionType? @map("institution_type")
+  positionTitle         String           @map("position_title")
+  cityId                String?          @map("city_id")
+  quotaCount            Int?             @map("quota_count")
+  employmentType        EmploymentType?  @map("employment_type")
+  minimumEducationLevel EducationLevel?  @map("minimum_education_level")
+  kpssScoreType         String?          @map("kpss_score_type")
+  minKpssScore          Float?           @map("min_kpss_score")
+  minAge                Int?             @map("min_age")
+  maxAge                Int?             @map("max_age")
+  requiresExperience    Boolean          @default(false) @map("requires_experience")
+  applicationStartDate  DateTime?        @map("application_start_date")
+  applicationEndDate    DateTime?        @map("application_end_date")
+  applicationUrl        String?          @map("application_url")
+  description           String?
+  pdfStorageKey         String?          @map("pdf_storage_key")
+  rawText               String?          @map("raw_text")
+  parsingConfidence     Float?           @map("parsing_confidence")
+  status                JobPostingStatus @default(DRAFT)
+  createdAt             DateTime         @default(now()) @map("created_at")
+  updatedAt             DateTime         @updatedAt @map("updated_at")
+
+  source              CrawlSource                  @relation(fields: [sourceId], references: [id])
+  city                City?                        @relation(fields: [cityId], references: [id])
+  qualificationCodes  JobPostingQualificationCode[]
+  departments         JobPostingDepartment[]
+  requirements        JobPostingRequirement[]
+  versions            JobPostingVersion[]
+  matchResults        MatchResult[]
+  notificationLogs    NotificationLog[]
+  favoritedBy         JobPostingFavorite[]
+  applications        JobApplication[]
+
+  @@index([kpssScoreType, cityId, status])
+  @@index([institutionType, employmentType, minimumEducationLevel])
+  @@map("job_postings")
+}
+
+model JobPostingFavorite {
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  jobPostingId String   @map("job_posting_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobPosting JobPosting @relation(fields: [jobPostingId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, jobPostingId])
+  @@index([userId])
+  @@map("job_posting_favorites")
+}
+
+enum ApplicationStatus {
+  DOCUMENTS_PENDING
+  UNDER_REVIEW
+  INTERVIEW
+  ACCEPTED
+  REJECTED
+}
+
+model JobApplication {
+  id              String            @id @default(uuid())
+  userId          String            @map("user_id")
+  jobPostingId    String            @map("job_posting_id")
+  status          ApplicationStatus @default(DOCUMENTS_PENDING)
+  note            String?
+  nextActionLabel String?           @map("next_action_label")
+  nextActionDate  DateTime?         @map("next_action_date")
+  createdAt       DateTime          @default(now()) @map("created_at")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobPosting JobPosting @relation(fields: [jobPostingId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, jobPostingId])
+  @@index([userId])
+  @@map("job_applications")
+}
+
+model JobPostingQualificationCode {
+  id           String  @id @default(uuid())
+  jobPostingId String  @map("job_posting_id")
+  code         String
+  description  String?
+
+  jobPosting JobPosting @relation(fields: [jobPostingId], references: [id], onDelete: Cascade)
+
+  @@index([jobPostingId])
+  @@map("job_posting_qualification_codes")
+}
+
+model JobPostingDepartment {
+  id             String @id @default(uuid())
+  jobPostingId   String @map("job_posting_id")
+  departmentName String @map("department_name")
+
+  jobPosting JobPosting @relation(fields: [jobPostingId], references: [id], onDelete: Cascade)
+
+  @@index([jobPostingId])
+  @@map("job_posting_departments")
+}
+
+enum RequirementType {
+  CERTIFICATE
+  DRIVING_LICENSE
+  YDS
+  EXPERIENCE
+  OTHER
+}
+
+model JobPostingRequirement {
+  id               String          @id @default(uuid())
+  jobPostingId     String          @map("job_posting_id")
+  requirementType  RequirementType @map("requirement_type")
+  requirementValue Json            @map("requirement_value")
+
+  jobPosting JobPosting @relation(fields: [jobPostingId], references: [id], onDelete: Cascade)
+
+  @@index([jobPostingId])
+  @@map("job_posting_requirements")
+}
+
+model JobPostingVersion {
+  id           String   @id @default(uuid())
+  jobPostingId String   @map("job_posting_id")
+  snapshot     Json
+  changedAt    DateTime @default(now()) @map("changed_at")
+  changeReason String?  @map("change_reason")
+
+  jobPosting JobPosting @relation(fields: [jobPostingId], references: [id], onDelete: Cascade)
+
+  @@index([jobPostingId])
+  @@map("job_posting_versions")
+}
+
+// ==============================
+// Matching
+// ==============================
+
+enum EligibilityStatus {
+  ELIGIBLE
+  PARTIALLY_ELIGIBLE
+  NOT_ELIGIBLE
+}
+
+model MatchResult {
+  id                String            @id @default(uuid())
+  userId            String            @map("user_id")
+  jobPostingId      String            @map("job_posting_id")
+  eligibilityStatus EligibilityStatus @map("eligibility_status")
+  missingCriteria   Json?             @map("missing_criteria")
+  calculatedAt      DateTime          @default(now()) @map("calculated_at")
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobPosting JobPosting @relation(fields: [jobPostingId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, jobPostingId])
+  @@index([userId, eligibilityStatus])
+  @@map("match_results")
+}
+
+// ==============================
+// Notification
+// ==============================
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
+  READ
+}
+
+enum NotificationType {
+  NEW_MATCH
+  DEADLINE_SOON
+}
+
+model NotificationLog {
+  id           String              @id @default(uuid())
+  userId       String              @map("user_id")
+  jobPostingId String?             @map("job_posting_id")
+  channel      NotificationChannel
+  type         NotificationType
+  title        String
+  message      String
+  status       NotificationStatus  @default(SENT)
+  sentAt       DateTime?           @map("sent_at")
+  createdAt    DateTime            @default(now()) @map("created_at")
+  payload      Json?
+
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobPosting JobPosting? @relation(fields: [jobPostingId], references: [id])
+
+  @@unique([userId, jobPostingId, type])
+  @@index([userId, createdAt])
+  @@map("notification_logs")
+}
+
+// ==============================
+// Audit
+// ==============================
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  actorUserId String?  @map("actor_user_id")
+  action      String
+  entityType  String   @map("entity_type")
+  entityId    String   @map("entity_id")
+  changes     Json?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  actor User? @relation(fields: [actorUserId], references: [id])
+
+  @@index([entityType, entityId])
+  @@map("audit_logs")
+}

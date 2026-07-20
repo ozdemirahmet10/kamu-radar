@@ -1,0 +1,28 @@
+# syntax=docker/dockerfile:1
+FROM node:20-alpine AS builder
+WORKDIR /usr/src/app
+
+COPY package*.json ./
+COPY prisma ./prisma
+RUN npm ci
+
+COPY tsconfig*.json nest-cli.json ./
+COPY libs ./libs
+COPY src ./src
+RUN npx prisma generate
+RUN npm run build
+
+FROM node:20-alpine AS runtime
+ENV NODE_ENV=production
+WORKDIR /usr/src/app
+
+RUN addgroup -S app && adduser -S app -G app
+COPY package*.json ./
+COPY prisma ./prisma
+RUN npm ci --omit=dev && npx prisma generate
+
+COPY --from=builder /usr/src/app/dist ./dist
+
+USER app
+EXPOSE 3000
+CMD ["node", "dist/src/main.js"]
