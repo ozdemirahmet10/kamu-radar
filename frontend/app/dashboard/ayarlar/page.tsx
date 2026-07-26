@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Bell,
+  Download,
   Eye,
   EyeOff,
   History,
@@ -109,6 +110,9 @@ function SettingsContent() {
 
   const [securityHistory, setSecurityHistory] = useState<SecurityHistoryItem[]>([]);
   const [isLoadingSecurityHistory, setIsLoadingSecurityHistory] = useState(true);
+
+  const [isExportingData, setIsExportingData] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deletePassword, setDeletePassword] = useState('');
@@ -293,6 +297,28 @@ function SettingsContent() {
       setRevokeOthersNotice('İşlem başarısız oldu, tekrar deneyin.');
     } finally {
       setIsRevokingOthers(false);
+    }
+  };
+
+  const handleExportData = async () => {
+    if (!accessToken || isExportingData) return;
+    setIsExportingData(true);
+    setExportError(null);
+    try {
+      const data = await authApi.exportMyData(accessToken);
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `kamu-radar-verilerim-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      setExportError('Verileriniz indirilemedi, tekrar deneyin.');
+    } finally {
+      setIsExportingData(false);
     }
   };
 
@@ -630,6 +656,32 @@ function SettingsContent() {
                 ))}
               </div>
             )}
+          </Card>
+
+          <Card>
+            <h2 className="flex items-center gap-2 text-base font-semibold text-slate-900">
+              <Download size={18} className="text-brand-600" />
+              Verilerimi İndir
+            </h2>
+            <p className="mt-1 text-xs text-slate-500">
+              Profiliniz, eşleşmeleriniz, favorileriniz, başvurularınız ve bildirimleriniz dahil
+              hesabınıza ait tüm verilerin bir kopyasını JSON dosyası olarak indirin (KVKK veri
+              taşınabilirliği hakkı).
+            </p>
+            {exportError && <p className="mt-2 text-sm text-danger-600">{exportError}</p>}
+            <button
+              type="button"
+              onClick={handleExportData}
+              disabled={isExportingData}
+              className="mt-4 inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+            >
+              {isExportingData ? (
+                <Loader2 className="animate-spin" size={16} />
+              ) : (
+                <Download size={16} />
+              )}
+              {isExportingData ? 'Hazırlanıyor...' : 'Verilerimi İndir'}
+            </button>
           </Card>
 
           <Card className="border-danger-100">

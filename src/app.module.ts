@@ -14,6 +14,7 @@ import { MatchingModule } from './modules/matching/matching.module';
 import { FavoritesModule } from './modules/favorites/favorites.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { ApplicationsModule } from './modules/applications/applications.module';
+import { DataExportModule } from './modules/data-export/data-export.module';
 import { HealthController } from './common/controllers/health.controller';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { ResponseEnvelopeInterceptor } from './common/interceptors/response-envelope.interceptor';
@@ -43,6 +44,7 @@ import { AdminDashboardModule } from './common/dashboard/admin-dashboard.module'
     FavoritesModule,
     NotificationsModule,
     ApplicationsModule,
+    DataExportModule,
   ],
   controllers: [HealthController],
   providers: [

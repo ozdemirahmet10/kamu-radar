@@ -20,5 +20,6 @@ import { MeApplicationsController } from './presentation/controllers/me-applicat
     UpdateApplicationUseCase,
     ListMyApplicationsUseCase,
   ],
+  exports: [APPLICATION_REPOSITORY],
 })
 export class ApplicationsModule {}

@@ -72,5 +72,6 @@ import { PushConfigController } from './presentation/controllers/push-config.con
     NotificationDigestProcessor,
     NotificationDigestSchedulerService,
   ],
+  exports: [NOTIFICATION_REPOSITORY, NOTIFICATION_PREFERENCE_REPOSITORY, PUSH_SUBSCRIPTION_REPOSITORY],
 })
 export class NotificationsModule {}

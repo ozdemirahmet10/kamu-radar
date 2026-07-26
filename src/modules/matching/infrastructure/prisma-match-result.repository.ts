@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@app/database';
 import { EligibilityStatus } from '../domain/entities/eligibility-result';
-import { IMatchResultRepository } from '../domain/repositories/match-result.repository.interface';
+import {
+  IMatchResultRepository,
+  MatchResultRecord,
+} from '../domain/repositories/match-result.repository.interface';
 
 @Injectable()
 export class PrismaMatchResultRepository implements IMatchResultRepository {
@@ -28,5 +31,19 @@ export class PrismaMatchResultRepository implements IMatchResultRepository {
         calculatedAt: new Date(),
       },
     });
+  }
+
+  async findByUserId(userId: string): Promise<MatchResultRecord[]> {
+    const records = await this.prisma.matchResult.findMany({
+      where: { userId },
+      orderBy: { calculatedAt: 'desc' },
+    });
+
+    return records.map((record) => ({
+      jobPostingId: record.jobPostingId,
+      eligibilityStatus: record.eligibilityStatus as EligibilityStatus,
+      missingCriteria: (record.missingCriteria as string[] | null) ?? [],
+      calculatedAt: record.calculatedAt,
+    }));
   }
 }

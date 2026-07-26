@@ -182,6 +182,9 @@ export const authApi = {
     apiFetch<SecurityHistoryListResponse>(`/auth/security-history${buildQueryString(params)}`, {
       accessToken,
     }),
+
+  exportMyData: (accessToken: string) =>
+    apiFetch<Record<string, unknown>>('/me/data-export', { accessToken }),
 };
 
 export interface Session {

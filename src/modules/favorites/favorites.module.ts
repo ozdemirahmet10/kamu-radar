@@ -20,5 +20,6 @@ import { MeFavoritesController } from './presentation/controllers/me-favorites.c
     RemoveFavoriteUseCase,
     ListMyFavoritesUseCase,
   ],
+  exports: [FAVORITE_REPOSITORY],
 })
 export class FavoritesModule {}

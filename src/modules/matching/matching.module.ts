@@ -16,6 +16,6 @@ import { MeMatchesController } from './presentation/controllers/me-matches.contr
     EligibilityRuleEngine,
     GetMyMatchesUseCase,
   ],
-  exports: [GetMyMatchesUseCase],
+  exports: [GetMyMatchesUseCase, MATCH_RESULT_REPOSITORY],
 })
 export class MatchingModule {}
