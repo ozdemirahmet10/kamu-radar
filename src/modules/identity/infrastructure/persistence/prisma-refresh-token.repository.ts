@@ -52,6 +52,14 @@ export class PrismaRefreshTokenRepository implements IRefreshTokenRepository {
     });
   }
 
+  async revokeAllForUserExcept(userId: string, exceptSessionId: string): Promise<number> {
+    const result = await this.prisma.refreshToken.updateMany({
+      where: { userId, revokedAt: null, id: { not: exceptSessionId } },
+      data: { revokedAt: new Date() },
+    });
+    return result.count;
+  }
+
   async listActiveForUser(userId: string, referenceDate: Date): Promise<StoredRefreshToken[]> {
     const records = await this.prisma.refreshToken.findMany({
       where: { userId, revokedAt: null, expiresAt: { gt: referenceDate } },

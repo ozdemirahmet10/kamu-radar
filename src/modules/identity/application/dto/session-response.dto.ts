@@ -14,12 +14,16 @@ export class SessionResponseDto {
   @ApiProperty()
   expiresAt!: string;
 
-  static fromDomain(session: StoredRefreshToken): SessionResponseDto {
+  @ApiProperty()
+  isCurrent!: boolean;
+
+  static fromDomain(session: StoredRefreshToken, currentSessionId: string): SessionResponseDto {
     const dto = new SessionResponseDto();
     dto.id = session.id;
     dto.deviceInfo = session.deviceInfo;
     dto.createdAt = session.createdAt.toISOString();
     dto.expiresAt = session.expiresAt.toISOString();
+    dto.isCurrent = session.id === currentSessionId;
     return dto;
   }
 }

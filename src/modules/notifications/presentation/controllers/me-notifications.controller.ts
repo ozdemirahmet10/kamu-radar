@@ -11,6 +11,7 @@ import { GetNotificationPreferenceUseCase } from '../../application/use-cases/ge
 import { UpdateNotificationPreferenceUseCase } from '../../application/use-cases/update-notification-preference.use-case';
 import { ListMyNotificationsQueryDto } from '../../application/dto/list-my-notifications-query.dto';
 import { UpdateNotificationPreferenceDto } from '../../application/dto/update-notification-preference.dto';
+import { DigestFrequency } from '../../domain/repositories/notification-preference.repository.interface';
 
 @ApiTags('me/notifications')
 @ApiBearerAuth()
@@ -59,7 +60,7 @@ export class MeNotificationsController {
   @Get('preference')
   async getPreference(
     @CurrentUser() user: RequestUser,
-  ): Promise<{ inAppEnabled: boolean; emailEnabled: boolean }> {
+  ): Promise<{ inAppEnabled: boolean; emailEnabled: boolean; emailDigestFrequency: DigestFrequency }> {
     return this.getNotificationPreferenceUseCase.execute(user.userId);
   }
 
@@ -71,6 +72,7 @@ export class MeNotificationsController {
     await this.updateNotificationPreferenceUseCase.execute(user.userId, {
       inAppEnabled: dto.inAppEnabled,
       emailEnabled: dto.emailEnabled,
+      emailDigestFrequency: dto.emailDigestFrequency,
     });
   }
 }

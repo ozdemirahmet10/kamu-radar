@@ -50,12 +50,13 @@ export class RefreshTokenUseCase {
     // Rotasyon: kullanılan refresh token invalidate edilir, yenisi üretilir.
     await this.refreshTokenRepository.revoke(stored.id);
 
+    const { token: newRefreshToken, jti } = this.tokenService.generateRefreshToken(user.id);
     const accessToken = this.tokenService.generateAccessToken({
       sub: user.id,
       email: user.email.value,
       role: user.role,
+      sessionId: jti,
     });
-    const { token: newRefreshToken, jti } = this.tokenService.generateRefreshToken(user.id);
     const newRefreshTokenHash = await this.tokenService.hashRefreshToken(newRefreshToken);
 
     await this.refreshTokenRepository.create({

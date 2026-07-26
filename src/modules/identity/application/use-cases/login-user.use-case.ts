@@ -11,6 +11,7 @@ import { HASHER_SERVICE, IHasherService } from '../ports/hasher.port';
 import { ITokenService, TOKEN_SERVICE, TokenPair } from '../ports/token.port';
 import { LoginDto } from '../dto/login.dto';
 import { REFRESH_TOKEN_TTL_MS } from '../constants';
+import { AuditLogService } from '../../../../common/audit/audit-log.service';
 
 @Injectable()
 export class LoginUserUseCase {
@@ -20,6 +21,7 @@ export class LoginUserUseCase {
     private readonly refreshTokenRepository: IRefreshTokenRepository,
     @Inject(HASHER_SERVICE) private readonly hasherService: IHasherService,
     @Inject(TOKEN_SERVICE) private readonly tokenService: ITokenService,
+    private readonly auditLogService: AuditLogService,
   ) {}
 
   async execute(dto: LoginDto, deviceInfo?: string): Promise<TokenPair> {
@@ -45,12 +47,13 @@ export class LoginUserUseCase {
       );
     }
 
+    const { token: refreshToken, jti } = this.tokenService.generateRefreshToken(user.id);
     const accessToken = this.tokenService.generateAccessToken({
       sub: user.id,
       email: user.email.value,
       role: user.role,
+      sessionId: jti,
     });
-    const { token: refreshToken, jti } = this.tokenService.generateRefreshToken(user.id);
     const refreshTokenHash = await this.tokenService.hashRefreshToken(refreshToken);
 
     await this.refreshTokenRepository.create({
@@ -59,6 +62,14 @@ export class LoginUserUseCase {
       tokenHash: refreshTokenHash,
       expiresAt: new Date(Date.now() + REFRESH_TOKEN_TTL_MS),
       deviceInfo,
+    });
+
+    await this.auditLogService.record({
+      actorUserId: user.id,
+      action: 'LOGIN',
+      entityType: 'USER',
+      entityId: user.id,
+      changes: deviceInfo ? { deviceInfo } : undefined,
     });
 
     return { accessToken, refreshToken };

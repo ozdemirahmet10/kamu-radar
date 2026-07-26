@@ -167,6 +167,21 @@ export const authApi = {
 
   resendVerification: (accessToken: string) =>
     apiFetch<void>('/auth/resend-verification', { method: 'POST', accessToken }),
+
+  deleteAccount: (password: string, accessToken: string) =>
+    apiFetch<void>('/auth/me/delete', {
+      method: 'POST',
+      body: JSON.stringify({ password }),
+      accessToken,
+    }),
+
+  getSecurityHistory: (
+    params: { page?: number; pageSize?: number } = {},
+    accessToken: string,
+  ) =>
+    apiFetch<SecurityHistoryListResponse>(`/auth/security-history${buildQueryString(params)}`, {
+      accessToken,
+    }),
 };
 
 export interface Session {
@@ -174,6 +189,7 @@ export interface Session {
   deviceInfo: string | null;
   createdAt: string;
   expiresAt: string;
+  isCurrent: boolean;
 }
 
 export const sessionsApi = {
@@ -181,7 +197,29 @@ export const sessionsApi = {
 
   revoke: (sessionId: string, accessToken: string) =>
     apiFetch<void>(`/auth/sessions/${sessionId}`, { method: 'DELETE', accessToken }),
+
+  revokeOthers: (accessToken: string) =>
+    apiFetch<{ revokedCount: number }>('/auth/sessions/revoke-others', {
+      method: 'POST',
+      accessToken,
+    }),
 };
+
+export interface SecurityHistoryItem {
+  id: string;
+  action: string;
+  label: string;
+  deviceInfo: string | null;
+  createdAt: string;
+}
+
+export interface SecurityHistoryListResponse {
+  items: SecurityHistoryItem[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+}
 
 export const profileApi = {
   getMine: (accessToken: string) => apiFetch<ProfileResponse>('/profile/me', { accessToken }),
@@ -517,9 +555,12 @@ export const notificationsApi = {
     apiFetch<void>('/me/notifications/read-all', { method: 'POST', accessToken }),
 };
 
+export type DigestFrequency = 'INSTANT' | 'DAILY';
+
 export interface NotificationPreference {
   inAppEnabled: boolean;
   emailEnabled: boolean;
+  emailDigestFrequency: DigestFrequency;
 }
 
 export const notificationPreferenceApi = {
@@ -530,6 +571,29 @@ export const notificationPreferenceApi = {
     apiFetch<void>('/me/notifications/preference', {
       method: 'PATCH',
       body: JSON.stringify(patch),
+      accessToken,
+    }),
+};
+
+export interface PushSubscriptionPayload {
+  endpoint: string;
+  keys: { p256dh: string; auth: string };
+}
+
+export const pushApi = {
+  getPublicKey: () => apiFetch<{ publicKey: string }>('/push/vapid-public-key'),
+
+  subscribe: (payload: PushSubscriptionPayload, accessToken: string) =>
+    apiFetch<void>('/me/push/subscribe', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+      accessToken,
+    }),
+
+  unsubscribe: (endpoint: string, accessToken: string) =>
+    apiFetch<void>('/me/push/subscribe', {
+      method: 'DELETE',
+      body: JSON.stringify({ endpoint }),
       accessToken,
     }),
 };

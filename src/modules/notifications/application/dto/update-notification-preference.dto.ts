@@ -1,5 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsBoolean, IsOptional } from 'class-validator';
+import { IsBoolean, IsIn, IsOptional } from 'class-validator';
+import { DigestFrequency } from '../../domain/repositories/notification-preference.repository.interface';
 
 export class UpdateNotificationPreferenceDto {
   @ApiPropertyOptional()
@@ -11,4 +12,9 @@ export class UpdateNotificationPreferenceDto {
   @IsOptional()
   @IsBoolean()
   emailEnabled?: boolean;
+
+  @ApiPropertyOptional({ enum: ['INSTANT', 'DAILY'] })
+  @IsOptional()
+  @IsIn(['INSTANT', 'DAILY'])
+  emailDigestFrequency?: DigestFrequency;
 }

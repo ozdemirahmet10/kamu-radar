@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import {
+  DigestFrequency,
   INotificationPreferenceRepository,
   NOTIFICATION_PREFERENCE_REPOSITORY,
 } from '../../domain/repositories/notification-preference.repository.interface';
@@ -13,7 +14,7 @@ export class UpdateNotificationPreferenceUseCase {
 
   async execute(
     userId: string,
-    input: { inAppEnabled?: boolean; emailEnabled?: boolean },
+    input: { inAppEnabled?: boolean; emailEnabled?: boolean; emailDigestFrequency?: DigestFrequency },
   ): Promise<void> {
     const tasks: Promise<void>[] = [];
     if (input.inAppEnabled !== undefined) {
@@ -21,6 +22,11 @@ export class UpdateNotificationPreferenceUseCase {
     }
     if (input.emailEnabled !== undefined) {
       tasks.push(this.preferenceRepository.setEmailEnabled(userId, input.emailEnabled));
+    }
+    if (input.emailDigestFrequency !== undefined) {
+      tasks.push(
+        this.preferenceRepository.setEmailDigestFrequency(userId, input.emailDigestFrequency),
+      );
     }
     await Promise.all(tasks);
   }

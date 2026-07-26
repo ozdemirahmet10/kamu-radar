@@ -18,7 +18,12 @@ import {
   INotificationPreferenceRepository,
   NOTIFICATION_PREFERENCE_REPOSITORY,
 } from '../../domain/repositories/notification-preference.repository.interface';
+import {
+  IPushSubscriptionRepository,
+  PUSH_SUBSCRIPTION_REPOSITORY,
+} from '../../domain/repositories/push-subscription.repository.interface';
 import { EMAIL_SENDER, IEmailSender } from '@app/email';
+import { PUSH_SENDER, IPushSender } from '../ports/push-sender.port';
 import { buildNotificationEmailHtml } from '../services/notification-email.template';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -49,6 +54,9 @@ export class SyncNotificationsUseCase {
     private readonly preferenceRepository: INotificationPreferenceRepository,
     @Inject(USER_REPOSITORY) private readonly userRepository: IUserRepository,
     @Inject(EMAIL_SENDER) private readonly emailSender: IEmailSender,
+    @Inject(PUSH_SUBSCRIPTION_REPOSITORY)
+    private readonly pushSubscriptionRepository: IPushSubscriptionRepository,
+    @Inject(PUSH_SENDER) private readonly pushSender: IPushSender,
     private readonly configService: AppConfigService,
   ) {}
 
@@ -61,6 +69,13 @@ export class SyncNotificationsUseCase {
       return;
     }
     const emailEnabled = await this.preferenceRepository.isEmailEnabled(userId);
+    // Günlük özet seçilmişse anlık e-posta gönderilmez — bildirim yine de burada
+    // oluşturulur (in-app listesinde görünsün diye), gönderimi DailyEmailDigestUseCase
+    // üstlenir (bkz. notification-digest-queue).
+    const emailDigestFrequency = emailEnabled
+      ? await this.preferenceRepository.getEmailDigestFrequency(userId)
+      : 'INSTANT';
+    const shouldSendInstantEmail = emailEnabled && emailDigestFrequency === 'INSTANT';
 
     const result = await this.getMyMatchesUseCase.execute({
       userId,
@@ -69,14 +84,38 @@ export class SyncNotificationsUseCase {
       pageSize: MAX_MATCHES_SCANNED,
     });
 
-    const user = emailEnabled ? await this.userRepository.findById(userId) : null;
+    const user = shouldSendInstantEmail ? await this.userRepository.findById(userId) : null;
+    // Web Push'ta ayrı bir "açık/kapalı" tercihi yok — kullanıcının aboneliğinin var
+    // olması zaten opt-in'dir (tarayıcı izni verip abone olmadan kayıt oluşmaz).
+    const pushSubscriptions = await this.pushSubscriptionRepository.findByUserId(userId);
     const now = Date.now();
     const tasks: Promise<void>[] = [];
+
+    const sendPushToAllSubscriptions = async (title: string, body: string, jobPostingId: string) => {
+      const url = `${this.configService.frontendUrl}/dashboard/ilanlar/${jobPostingId}`;
+      await Promise.all(
+        pushSubscriptions.map(async (subscription) => {
+          const { shouldRemoveSubscription } = await this.pushSender.send({
+            subscription,
+            title,
+            body,
+            url,
+          });
+          if (shouldRemoveSubscription) {
+            await this.pushSubscriptionRepository.deleteByEndpoint(subscription.endpoint);
+          }
+        }),
+      );
+    };
 
     const handleCandidate = (candidate: NotificationCandidate, jobPostingId: string) => {
       tasks.push(
         this.notificationRepository.upsertIfNotExists(candidate).then(async ({ wasCreated }) => {
-          if (!wasCreated || !emailEnabled || !user) return;
+          if (!wasCreated) return;
+          if (pushSubscriptions.length > 0) {
+            await sendPushToAllSubscriptions(candidate.title, candidate.message, jobPostingId);
+          }
+          if (!shouldSendInstantEmail || !user) return;
           await this.emailSender.send({
             to: user.email.value,
             subject: candidate.title,

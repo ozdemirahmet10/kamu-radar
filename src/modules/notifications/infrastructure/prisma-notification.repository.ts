@@ -93,4 +93,20 @@ export class PrismaNotificationRepository implements INotificationRepository {
       data: { status: 'READ' },
     });
   }
+
+  async findCreatedSince(userId: string, since: Date): Promise<NotificationRecord[]> {
+    const records = await this.prisma.notificationLog.findMany({
+      where: { userId, channel: 'IN_APP', createdAt: { gte: since } },
+      orderBy: { createdAt: 'desc' },
+    });
+    return records.map((record) => ({
+      id: record.id,
+      jobPostingId: record.jobPostingId,
+      type: record.type as NotificationRecord['type'],
+      title: record.title,
+      message: record.message,
+      isRead: record.status === 'READ',
+      createdAt: record.createdAt,
+    }));
+  }
 }

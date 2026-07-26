@@ -41,4 +41,6 @@ export interface INotificationRepository {
   countUnread(userId: string): Promise<number>;
   markRead(userId: string, id: string): Promise<void>;
   markAllRead(userId: string): Promise<void>;
+  /** Günlük özet e-postası için — belirtilen tarihten sonra oluşturulan bildirimler. */
+  findCreatedSince(userId: string, since: Date): Promise<NotificationRecord[]>;
 }

@@ -27,6 +27,9 @@ import { ChangePasswordUseCase } from './application/use-cases/change-password.u
 import { UpdateMyAccountUseCase } from './application/use-cases/update-my-account.use-case';
 import { ListMySessionsUseCase } from './application/use-cases/list-my-sessions.use-case';
 import { RevokeMySessionUseCase } from './application/use-cases/revoke-my-session.use-case';
+import { RevokeAllOtherSessionsUseCase } from './application/use-cases/revoke-all-other-sessions.use-case';
+import { DeleteMyAccountUseCase } from './application/use-cases/delete-my-account.use-case';
+import { GetMySecurityHistoryUseCase } from './application/use-cases/get-my-security-history.use-case';
 import { RequestPasswordResetUseCase } from './application/use-cases/request-password-reset.use-case';
 import { ResetPasswordUseCase } from './application/use-cases/reset-password.use-case';
 import { SendEmailVerificationUseCase } from './application/use-cases/send-email-verification.use-case';
@@ -65,6 +68,9 @@ import { RolesGuard } from './presentation/guards/roles.guard';
     UpdateMyAccountUseCase,
     ListMySessionsUseCase,
     RevokeMySessionUseCase,
+    RevokeAllOtherSessionsUseCase,
+    DeleteMyAccountUseCase,
+    GetMySecurityHistoryUseCase,
     RequestPasswordResetUseCase,
     ResetPasswordUseCase,
     SendEmailVerificationUseCase,

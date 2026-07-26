@@ -12,6 +12,7 @@ export interface RequestUser {
   userId: string;
   email: string;
   role: string;
+  sessionId: string;
 }
 
 @Injectable()
@@ -39,6 +40,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('Hesabınıza erişim engellenmiştir');
     }
 
-    return { userId: payload.sub, email: payload.email, role: payload.role };
+    return {
+      userId: payload.sub,
+      email: payload.email,
+      role: payload.role,
+      sessionId: payload.sessionId,
+    };
   }
 }

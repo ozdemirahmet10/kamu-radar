@@ -8,6 +8,7 @@ import {
   IVerificationTokenRepository,
   VERIFICATION_TOKEN_REPOSITORY,
 } from '../../domain/repositories/verification-token.repository.interface';
+import { AuditLogService } from '../../../../common/audit/audit-log.service';
 
 @Injectable()
 export class VerifyEmailUseCase {
@@ -15,6 +16,7 @@ export class VerifyEmailUseCase {
     @Inject(USER_REPOSITORY) private readonly userRepository: IUserRepository,
     @Inject(VERIFICATION_TOKEN_REPOSITORY)
     private readonly tokenRepository: IVerificationTokenRepository,
+    private readonly auditLogService: AuditLogService,
   ) {}
 
   async execute(rawToken: string): Promise<void> {
@@ -32,5 +34,12 @@ export class VerifyEmailUseCase {
     user.verifyEmail();
     await this.userRepository.save(user);
     await this.tokenRepository.markUsed(token.id);
+
+    await this.auditLogService.record({
+      actorUserId: user.id,
+      action: 'EMAIL_VERIFIED',
+      entityType: 'USER',
+      entityId: user.id,
+    });
   }
 }

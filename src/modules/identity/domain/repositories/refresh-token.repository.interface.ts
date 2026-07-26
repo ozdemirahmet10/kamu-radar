@@ -21,6 +21,8 @@ export interface IRefreshTokenRepository {
   findById(id: string): Promise<StoredRefreshToken | null>;
   revoke(id: string): Promise<void>;
   revokeAllForUser(userId: string): Promise<void>;
+  /** "Tüm diğer cihazlardan çıkış yap" — mevcut oturum hariç tüm oturumları sonlandırır. */
+  revokeAllForUserExcept(userId: string, exceptSessionId: string): Promise<number>;
   /** Kullanıcının hâlâ geçerli (iptal edilmemiş, süresi geçmemiş) oturumları — "Oturumlar" ayarı için. */
   listActiveForUser(userId: string, referenceDate: Date): Promise<StoredRefreshToken[]>;
 }

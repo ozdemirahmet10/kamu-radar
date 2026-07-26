@@ -9,6 +9,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -22,6 +23,9 @@ import { ChangePasswordUseCase } from '../../application/use-cases/change-passwo
 import { UpdateMyAccountUseCase } from '../../application/use-cases/update-my-account.use-case';
 import { ListMySessionsUseCase } from '../../application/use-cases/list-my-sessions.use-case';
 import { RevokeMySessionUseCase } from '../../application/use-cases/revoke-my-session.use-case';
+import { RevokeAllOtherSessionsUseCase } from '../../application/use-cases/revoke-all-other-sessions.use-case';
+import { DeleteMyAccountUseCase } from '../../application/use-cases/delete-my-account.use-case';
+import { GetMySecurityHistoryUseCase } from '../../application/use-cases/get-my-security-history.use-case';
 import { RequestPasswordResetUseCase } from '../../application/use-cases/request-password-reset.use-case';
 import { ResetPasswordUseCase } from '../../application/use-cases/reset-password.use-case';
 import { SendEmailVerificationUseCase } from '../../application/use-cases/send-email-verification.use-case';
@@ -34,6 +38,9 @@ import { UpdateAccountDto } from '../../application/dto/update-account.dto';
 import { ForgotPasswordDto } from '../../application/dto/forgot-password.dto';
 import { ResetPasswordDto } from '../../application/dto/reset-password.dto';
 import { VerifyEmailDto } from '../../application/dto/verify-email.dto';
+import { DeleteAccountDto } from '../../application/dto/delete-account.dto';
+import { ListSecurityHistoryQueryDto } from '../../application/dto/list-security-history-query.dto';
+import { SecurityHistoryItemDto, SecurityHistoryListResponseDto } from '../../application/dto/security-history-response.dto';
 import { UserResponseDto } from '../../application/dto/user-response.dto';
 import { TokenResponseDto } from '../../application/dto/token-response.dto';
 import { SessionResponseDto } from '../../application/dto/session-response.dto';
@@ -54,6 +61,9 @@ export class AuthController {
     private readonly updateMyAccountUseCase: UpdateMyAccountUseCase,
     private readonly listMySessionsUseCase: ListMySessionsUseCase,
     private readonly revokeMySessionUseCase: RevokeMySessionUseCase,
+    private readonly revokeAllOtherSessionsUseCase: RevokeAllOtherSessionsUseCase,
+    private readonly deleteMyAccountUseCase: DeleteMyAccountUseCase,
+    private readonly getMySecurityHistoryUseCase: GetMySecurityHistoryUseCase,
     private readonly requestPasswordResetUseCase: RequestPasswordResetUseCase,
     private readonly resetPasswordUseCase: ResetPasswordUseCase,
     private readonly sendEmailVerificationUseCase: SendEmailVerificationUseCase,
@@ -125,7 +135,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   async listSessions(@CurrentUser() user: RequestUser): Promise<SessionResponseDto[]> {
     const sessions = await this.listMySessionsUseCase.execute(user.userId);
-    return sessions.map(SessionResponseDto.fromDomain);
+    return sessions.map((session) => SessionResponseDto.fromDomain(session, user.sessionId));
   }
 
   @Delete('sessions/:id')
@@ -137,6 +147,48 @@ export class AuthController {
     @Param('id') id: string,
   ): Promise<void> {
     await this.revokeMySessionUseCase.execute(user.userId, id);
+  }
+
+  @Post('sessions/revoke-others')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  async revokeOtherSessions(
+    @CurrentUser() user: RequestUser,
+  ): Promise<{ revokedCount: number }> {
+    return this.revokeAllOtherSessionsUseCase.execute(user.userId, user.sessionId);
+  }
+
+  @Get('security-history')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  async securityHistory(
+    @CurrentUser() user: RequestUser,
+    @Query() query: ListSecurityHistoryQueryDto,
+  ): Promise<SecurityHistoryListResponseDto> {
+    const result = await this.getMySecurityHistoryUseCase.execute(
+      user.userId,
+      query.page ?? 1,
+      query.pageSize ?? 20,
+    );
+    return {
+      items: result.items.map(SecurityHistoryItemDto.fromDomain),
+      page: result.page,
+      pageSize: result.pageSize,
+      totalCount: result.totalCount,
+      totalPages: result.totalPages,
+    };
+  }
+
+  @Post('me/delete')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  async deleteMyAccount(
+    @CurrentUser() user: RequestUser,
+    @Body() dto: DeleteAccountDto,
+  ): Promise<void> {
+    await this.deleteMyAccountUseCase.execute(user.userId, dto.password);
   }
 
   @Post('forgot-password')

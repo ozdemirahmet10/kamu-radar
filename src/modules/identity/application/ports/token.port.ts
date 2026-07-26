@@ -11,6 +11,8 @@ export interface AccessTokenPayload {
   sub: string;
   email: string;
   role: UserRole;
+  /** İlişkili refresh token'ın (oturumun) kimliği — "aktif oturum" tespiti için. */
+  sessionId: string;
 }
 
 export interface RefreshTokenPayload {
