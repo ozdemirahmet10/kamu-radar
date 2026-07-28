@@ -582,6 +582,17 @@ export const adminMatchFeedbackApi = {
     apiFetch<MatchFeedbackOverview>('/admin/match-feedback', { accessToken }),
 };
 
+export type SupportRequestType = 'GORUS' | 'TALEP' | 'ONERI';
+
+export const supportRequestsApi = {
+  submit: (type: SupportRequestType, message: string, accessToken: string) =>
+    apiFetch<void>('/me/support-requests', {
+      method: 'POST',
+      body: JSON.stringify({ type, message }),
+      accessToken,
+    }),
+};
+
 export type NotificationType = 'NEW_MATCH' | 'DEADLINE_SOON' | 'NEW_FROM_FOLLOWED_INSTITUTION';
 
 export interface NotificationRecord {

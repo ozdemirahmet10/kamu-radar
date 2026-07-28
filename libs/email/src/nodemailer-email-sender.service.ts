@@ -29,6 +29,7 @@ export class NodemailerEmailSender implements IEmailSender, OnModuleInit {
         to: params.to,
         subject: params.subject,
         html: params.html,
+        replyTo: params.replyTo,
       });
     } catch (error) {
       // E-posta gönderimi çağıran akışı asla bloklamamalı — e-posta her zaman

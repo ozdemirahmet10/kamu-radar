@@ -4,6 +4,7 @@ export interface SendEmailParams {
   to: string;
   subject: string;
   html: string;
+  replyTo?: string;
 }
 
 export interface IEmailSender {

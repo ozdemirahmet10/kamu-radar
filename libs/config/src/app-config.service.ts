@@ -52,6 +52,10 @@ export class AppConfigService {
     };
   }
 
+  get support() {
+    return { inboxEmail: this.get('SUPPORT_INBOX_EMAIL') };
+  }
+
   get webPush() {
     return {
       publicKey: this.get('WEB_PUSH_PUBLIC_KEY'),

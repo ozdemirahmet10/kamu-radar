@@ -24,6 +24,8 @@ export const envSchema = z.object({
   SMTP_PORT: z.coerce.number().int().positive().default(1025),
   SMTP_USER: z.string().optional().default(''),
   SMTP_PASSWORD: z.string().optional().default(''),
+  /** Kullanıcıların "İletişim & Destek" formundan gönderdiği taleplerin ulaşacağı kutu. */
+  SUPPORT_INBOX_EMAIL: z.string().email().default('info@kamuradar.com'),
 
   WEB_PUSH_PUBLIC_KEY: z.string().optional().default(''),
   WEB_PUSH_PRIVATE_KEY: z.string().optional().default(''),

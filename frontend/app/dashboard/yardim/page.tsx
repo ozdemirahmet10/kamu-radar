@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import {
   Bell,
+  CheckCircle2,
   ChevronDown,
   Database,
   Download,
@@ -11,6 +12,7 @@ import {
   KeyRound,
   Landmark,
   ListChecks,
+  Loader2,
   Mail,
   MessageCircleQuestion,
   ShieldCheck,
@@ -19,8 +21,8 @@ import {
 } from 'lucide-react';
 import { DashboardShell } from '@/components/dashboard/dashboard-shell';
 import { Card } from '@/components/ui/card';
-
-const SUPPORT_EMAIL = 'destek@kamuradar.com';
+import { useAuth } from '@/lib/auth-context';
+import { ApiError, supportRequestsApi, SupportRequestType } from '@/lib/api-client';
 
 interface FaqItem {
   question: string;
@@ -173,6 +175,12 @@ const SHORTCUT_LINKS: ShortcutLink[] = [
   { label: 'Hesabımı Sil', href: '/dashboard/ayarlar', icon: Trash2 },
 ];
 
+const REQUEST_TYPE_OPTIONS: { value: SupportRequestType; label: string }[] = [
+  { value: 'GORUS', label: 'Görüş' },
+  { value: 'TALEP', label: 'Talep' },
+  { value: 'ONERI', label: 'Öneri' },
+];
+
 function FaqAccordionItem({ item }: { item: FaqItem }) {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -194,6 +202,93 @@ function FaqAccordionItem({ item }: { item: FaqItem }) {
   );
 }
 
+function SupportRequestForm() {
+  const { accessToken } = useAuth();
+  const [type, setType] = useState<SupportRequestType>('GORUS');
+  const [message, setMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isSent, setIsSent] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!accessToken || isSubmitting) return;
+    setError(null);
+    setIsSubmitting(true);
+    try {
+      await supportRequestsApi.submit(type, message, accessToken);
+      setIsSent(true);
+      setMessage('');
+    } catch (err) {
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : 'Mesajınız gönderilemedi, lütfen tekrar deneyin.',
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (isSent) {
+    return (
+      <div className="flex items-start gap-2 rounded-xl bg-success-50 p-4 text-sm text-success-700">
+        <CheckCircle2 size={18} className="mt-0.5 shrink-0" />
+        <div>
+          <p className="font-semibold">Mesajınız iletildi, teşekkürler!</p>
+          <button
+            type="button"
+            onClick={() => setIsSent(false)}
+            className="mt-1 text-xs font-semibold text-success-700 underline underline-offset-2"
+          >
+            Yeni bir mesaj gönder
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-3">
+      <div className="flex gap-2">
+        {REQUEST_TYPE_OPTIONS.map((option) => (
+          <button
+            key={option.value}
+            type="button"
+            onClick={() => setType(option.value)}
+            className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors ${
+              type === option.value
+                ? 'border-brand-600 bg-brand-50 text-brand-700'
+                : 'border-slate-200 text-slate-500 hover:border-slate-300'
+            }`}
+          >
+            {option.label}
+          </button>
+        ))}
+      </div>
+      <textarea
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
+        required
+        minLength={10}
+        maxLength={2000}
+        rows={4}
+        placeholder="Görüşünüzü, talebinizi veya önerinizi buraya yazın..."
+        className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-700 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
+      />
+      {error && <p className="text-sm text-danger-600">{error}</p>}
+      <button
+        type="submit"
+        disabled={isSubmitting || message.trim().length < 10}
+        className="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
+      >
+        {isSubmitting && <Loader2 className="animate-spin" size={16} />}
+        {isSubmitting ? 'Gönderiliyor...' : 'Gönder'}
+      </button>
+    </form>
+  );
+}
+
 export default function HelpCenterPage() {
   return (
     <DashboardShell>
@@ -208,6 +303,25 @@ export default function HelpCenterPage() {
             bilgileri.
           </p>
         </div>
+
+        <Card>
+          <h2 className="flex items-center gap-2 text-base font-semibold text-slate-900">
+            <Database size={18} className="text-brand-600" />
+            Platform Hakkında
+          </h2>
+          <div className="mt-3 space-y-2 text-sm text-slate-500">
+            <p>
+              Kamu Radar, resmi kamu ilan kaynaklarını (Kamu İlan Portalı, ilan.gov.tr gibi)
+              düzenli aralıklarla tarayarak ilanları otomatik olarak toplar ve profilinizle
+              eşleştirir.
+            </p>
+            <p>
+              İlan bilgileri kaynak sitelerden otomatik/yapay zeka destekli olarak çıkarılır.
+              Nadiren hatalı veya eksik bilgi olabilir — başvuru yapmadan önce ilanın resmi
+              kaynağındaki tam metnini kontrol etmeniz önerilir.
+            </p>
+          </div>
+        </Card>
 
         <Card>
           <h2 className="text-base font-semibold text-slate-900">Nasıl Kullanılır</h2>
@@ -254,51 +368,25 @@ export default function HelpCenterPage() {
           </div>
         </Card>
 
-        <div className="grid gap-6 lg:grid-cols-2">
-          <Card>
-            <h2 className="flex items-center gap-2 text-base font-semibold text-slate-900">
-              <Database size={18} className="text-brand-600" />
-              Platform Hakkında
-            </h2>
-            <div className="mt-3 space-y-2 text-sm text-slate-500">
-              <p>
-                Kamu Radar, resmi kamu ilan kaynaklarını (Kamu İlan Portalı, ilan.gov.tr gibi)
-                düzenli aralıklarla tarayarak ilanları otomatik olarak toplar ve profilinizle
-                eşleştirir.
-              </p>
-              <p>
-                İlan bilgileri kaynak sitelerden otomatik/yapay zeka destekli olarak çıkarılır.
-                Nadiren hatalı veya eksik bilgi olabilir — başvuru yapmadan önce ilanın resmi
-                kaynağındaki tam metnini kontrol etmeniz önerilir.
-              </p>
-            </div>
-          </Card>
-
-          <Card>
-            <h2 className="flex items-center gap-2 text-base font-semibold text-slate-900">
-              <Mail size={18} className="text-brand-600" />
-              İletişim & Destek
-            </h2>
-            <div className="mt-3 space-y-3 text-sm text-slate-500">
-              <p>
-                Bir sorunla mı karşılaştınız veya öneriniz mi var? Bize e-posta ile ulaşabilirsiniz:
-              </p>
-              <a
-                href={`mailto:${SUPPORT_EMAIL}`}
-                className="inline-flex items-center gap-1.5 font-semibold text-brand-600 hover:text-brand-700"
-              >
-                <Mail size={14} />
-                {SUPPORT_EMAIL}
-              </a>
-              <p className="flex items-start gap-1.5 pt-1">
-                <ShieldCheck size={14} className="mt-0.5 shrink-0 text-slate-400" />
-                Bir ilanın size uygun önerilip önerilmediğini düşünüyorsanız, "Bana Uygun
-                İlanlar" sayfasındaki 👍/👎 geri bildirim butonlarını kullanarak bize doğrudan
-                bildirebilirsiniz.
-              </p>
-            </div>
-          </Card>
-        </div>
+        <Card>
+          <h2 className="flex items-center gap-2 text-base font-semibold text-slate-900">
+            <Mail size={18} className="text-brand-600" />
+            İletişim & Destek
+          </h2>
+          <p className="mt-1 text-sm text-slate-500">
+            Görüşünüzü, talebinizi veya önerinizi aşağıdaki formdan iletebilirsiniz — doğrudan
+            destek ekibimize e-posta olarak ulaşır.
+          </p>
+          <div className="mt-4">
+            <SupportRequestForm />
+          </div>
+          <p className="mt-4 flex items-start gap-1.5 border-t border-slate-100 pt-4 text-xs text-slate-500">
+            <ShieldCheck size={14} className="mt-0.5 shrink-0 text-slate-400" />
+            Bir ilanın size uygun önerilip önerilmediğini düşünüyorsanız, &quot;Bana Uygun
+            İlanlar&quot; sayfasındaki 👍/👎 geri bildirim butonlarını kullanarak bize doğrudan
+            bildirebilirsiniz.
+          </p>
+        </Card>
 
         <Card>
           <h2 className="text-base font-semibold text-slate-900">Hesap İşlemleri Kısayolları</h2>
