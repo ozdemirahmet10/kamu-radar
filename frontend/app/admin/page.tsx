@@ -282,9 +282,14 @@ function AdminDashboardContent() {
                 <ThumbsDown size={14} /> Yanlış: <strong>{feedbackOverview.stats.inaccurate}</strong>
               </span>
             </div>
-            <div className="mt-4 max-h-80 divide-y divide-slate-100 overflow-y-auto">
+            <div className="mt-4 max-h-80 space-y-1.5 overflow-y-auto">
               {feedbackOverview.recent.map((item) => (
-                <div key={item.id} className="flex items-center justify-between gap-3 py-2 text-sm">
+                <div
+                  key={item.id}
+                  className={`flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-sm ${
+                    item.isAccurate ? 'bg-success-50' : 'bg-danger-50'
+                  }`}
+                >
                   <div className="min-w-0">
                     <p className="truncate font-medium text-slate-900">
                       {item.jobPosting
