@@ -2,6 +2,7 @@ export const MATCH_FEEDBACK_REPOSITORY = Symbol('MATCH_FEEDBACK_REPOSITORY');
 
 export interface MatchFeedbackRecord {
   id: string;
+  userId: string;
   jobPostingId: string;
   isAccurate: boolean;
   reason: string | null;

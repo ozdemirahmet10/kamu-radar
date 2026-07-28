@@ -36,7 +36,14 @@ export class PrismaMatchFeedbackRepository implements IMatchFeedbackRepository {
     return this.prisma.matchFeedback.findMany({
       orderBy: { createdAt: 'desc' },
       take: limit,
-      select: { id: true, jobPostingId: true, isAccurate: true, reason: true, createdAt: true },
+      select: {
+        id: true,
+        userId: true,
+        jobPostingId: true,
+        isAccurate: true,
+        reason: true,
+        createdAt: true,
+      },
     });
   }
 

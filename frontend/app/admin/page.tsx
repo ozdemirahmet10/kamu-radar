@@ -290,6 +290,9 @@ function AdminDashboardContent() {
                         ? `${item.jobPosting.institutionName} - ${item.jobPosting.positionTitle}`
                         : 'İlan bulunamadı'}
                     </p>
+                    <p className="truncate text-xs text-slate-500">
+                      {item.user ? `${item.user.fullName} (${item.user.email})` : 'Kullanıcı bulunamadı'}
+                    </p>
                     {item.reason && <p className="truncate text-xs text-slate-500">{item.reason}</p>}
                   </div>
                   {item.isAccurate ? (

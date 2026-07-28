@@ -568,6 +568,7 @@ export interface MatchFeedbackItem {
   reason: string | null;
   createdAt: string;
   jobPosting: { institutionName: string; positionTitle: string } | null;
+  user: { email: string; fullName: string } | null;
 }
 
 export interface MatchFeedbackOverview {

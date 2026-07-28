@@ -9,6 +9,10 @@ import {
   JOB_POSTING_REPOSITORY,
   IJobPostingRepository,
 } from '../../../job-catalog/domain/repositories/job-posting.repository.interface';
+import {
+  USER_REPOSITORY,
+  IUserRepository,
+} from '../../../identity/domain/repositories/user.repository.interface';
 
 @ApiTags('admin/match-feedback')
 @ApiBearerAuth()
@@ -19,27 +23,34 @@ export class AdminMatchFeedbackController {
   constructor(
     private readonly getMatchFeedbackOverviewUseCase: GetMatchFeedbackOverviewUseCase,
     @Inject(JOB_POSTING_REPOSITORY) private readonly jobPostingRepository: IJobPostingRepository,
+    @Inject(USER_REPOSITORY) private readonly userRepository: IUserRepository,
   ) {}
 
   @Get()
   async overview() {
     const { stats, recent } = await this.getMatchFeedbackOverviewUseCase.execute();
-    const jobPostings = await this.jobPostingRepository.findByIds(
-      recent.map((item) => item.jobPostingId),
-    );
+    const [jobPostings, users] = await Promise.all([
+      this.jobPostingRepository.findByIds(recent.map((item) => item.jobPostingId)),
+      this.userRepository.findByIds(recent.map((item) => item.userId)),
+    ]);
     const jobPostingById = new Map(jobPostings.map((job) => [job.id, job.snapshot]));
+    const userById = new Map(users.map((user) => [user.id, user]));
 
     return {
       stats,
-      recent: recent.map((item) => ({
-        ...item,
-        jobPosting: jobPostingById.has(item.jobPostingId)
-          ? {
-              institutionName: jobPostingById.get(item.jobPostingId)!.institutionName,
-              positionTitle: jobPostingById.get(item.jobPostingId)!.positionTitle,
-            }
-          : null,
-      })),
+      recent: recent.map((item) => {
+        const user = userById.get(item.userId);
+        return {
+          ...item,
+          jobPosting: jobPostingById.has(item.jobPostingId)
+            ? {
+                institutionName: jobPostingById.get(item.jobPostingId)!.institutionName,
+                positionTitle: jobPostingById.get(item.jobPostingId)!.positionTitle,
+              }
+            : null,
+          user: user ? { email: user.email.value, fullName: user.fullName } : null,
+        };
+      }),
     };
   }
 }
