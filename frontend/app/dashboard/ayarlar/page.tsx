@@ -449,6 +449,90 @@ function SettingsContent() {
               </Button>
             </form>
           </Card>
+
+          <Card>
+            <h2 className="flex items-center gap-2 text-base font-semibold text-slate-900">
+              <Download size={18} className="text-brand-600" />
+              Verilerimi İndir
+            </h2>
+            <p className="mt-1 text-xs text-slate-500">
+              Profiliniz, eşleşmeleriniz, favorileriniz, başvurularınız ve bildirimleriniz dahil
+              hesabınıza ait tüm verilerin bir kopyasını JSON dosyası olarak indirin (KVKK veri
+              taşınabilirliği hakkı).
+            </p>
+            {exportError && <p className="mt-2 text-sm text-danger-600">{exportError}</p>}
+            <button
+              type="button"
+              onClick={handleExportData}
+              disabled={isExportingData}
+              className="mt-4 inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+            >
+              {isExportingData ? (
+                <Loader2 className="animate-spin" size={16} />
+              ) : (
+                <Download size={16} />
+              )}
+              {isExportingData ? 'Hazırlanıyor...' : 'Verilerimi İndir'}
+            </button>
+          </Card>
+
+          <Card className="border-danger-100">
+            <h2 className="flex items-center gap-2 text-base font-semibold text-danger-700">
+              <Trash2 size={18} />
+              Hesabımı Sil
+            </h2>
+            <p className="mt-1 text-xs text-slate-500">
+              Hesabınızı ve tüm verilerinizi kalıcı olarak silin. Bu işlem geri alınamaz.
+            </p>
+
+            {!showDeleteConfirm ? (
+              <Button
+                type="button"
+                variant="outline"
+                className="mt-4 border-danger-200 text-danger-600 hover:bg-danger-50"
+                onClick={() => setShowDeleteConfirm(true)}
+              >
+                Hesabımı Sil
+              </Button>
+            ) : (
+              <form onSubmit={handleDeleteAccount} className="mt-4 space-y-3">
+                <p className="text-sm font-medium text-danger-700">
+                  Onaylamak için şifrenizi girin. Bu işlem geri alınamaz.
+                </p>
+                <Input
+                  label="Şifreniz"
+                  type="password"
+                  value={deletePassword}
+                  onChange={(e) => setDeletePassword(e.target.value)}
+                  autoComplete="current-password"
+                  required
+                />
+                {deleteError && (
+                  <p className="text-sm font-medium text-danger-600">{deleteError}</p>
+                )}
+                <div className="flex gap-2">
+                  <Button
+                    type="submit"
+                    className="border-danger-200 bg-danger-600 text-white hover:bg-danger-700"
+                    isLoading={isDeletingAccount}
+                  >
+                    Hesabımı Kalıcı Olarak Sil
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setShowDeleteConfirm(false);
+                      setDeletePassword('');
+                      setDeleteError(null);
+                    }}
+                  >
+                    Vazgeç
+                  </Button>
+                </div>
+              </form>
+            )}
+          </Card>
         </div>
 
         <div className="space-y-6">
@@ -655,90 +739,6 @@ function SettingsContent() {
                   </div>
                 ))}
               </div>
-            )}
-          </Card>
-
-          <Card>
-            <h2 className="flex items-center gap-2 text-base font-semibold text-slate-900">
-              <Download size={18} className="text-brand-600" />
-              Verilerimi İndir
-            </h2>
-            <p className="mt-1 text-xs text-slate-500">
-              Profiliniz, eşleşmeleriniz, favorileriniz, başvurularınız ve bildirimleriniz dahil
-              hesabınıza ait tüm verilerin bir kopyasını JSON dosyası olarak indirin (KVKK veri
-              taşınabilirliği hakkı).
-            </p>
-            {exportError && <p className="mt-2 text-sm text-danger-600">{exportError}</p>}
-            <button
-              type="button"
-              onClick={handleExportData}
-              disabled={isExportingData}
-              className="mt-4 inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
-            >
-              {isExportingData ? (
-                <Loader2 className="animate-spin" size={16} />
-              ) : (
-                <Download size={16} />
-              )}
-              {isExportingData ? 'Hazırlanıyor...' : 'Verilerimi İndir'}
-            </button>
-          </Card>
-
-          <Card className="border-danger-100">
-            <h2 className="flex items-center gap-2 text-base font-semibold text-danger-700">
-              <Trash2 size={18} />
-              Hesabımı Sil
-            </h2>
-            <p className="mt-1 text-xs text-slate-500">
-              Hesabınızı ve tüm verilerinizi kalıcı olarak silin. Bu işlem geri alınamaz.
-            </p>
-
-            {!showDeleteConfirm ? (
-              <Button
-                type="button"
-                variant="outline"
-                className="mt-4 border-danger-200 text-danger-600 hover:bg-danger-50"
-                onClick={() => setShowDeleteConfirm(true)}
-              >
-                Hesabımı Sil
-              </Button>
-            ) : (
-              <form onSubmit={handleDeleteAccount} className="mt-4 space-y-3">
-                <p className="text-sm font-medium text-danger-700">
-                  Onaylamak için şifrenizi girin. Bu işlem geri alınamaz.
-                </p>
-                <Input
-                  label="Şifreniz"
-                  type="password"
-                  value={deletePassword}
-                  onChange={(e) => setDeletePassword(e.target.value)}
-                  autoComplete="current-password"
-                  required
-                />
-                {deleteError && (
-                  <p className="text-sm font-medium text-danger-600">{deleteError}</p>
-                )}
-                <div className="flex gap-2">
-                  <Button
-                    type="submit"
-                    className="border-danger-200 bg-danger-600 text-white hover:bg-danger-700"
-                    isLoading={isDeletingAccount}
-                  >
-                    Hesabımı Kalıcı Olarak Sil
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      setShowDeleteConfirm(false);
-                      setDeletePassword('');
-                      setDeleteError(null);
-                    }}
-                  >
-                    Vazgeç
-                  </Button>
-                </div>
-              </form>
             )}
           </Card>
         </div>
