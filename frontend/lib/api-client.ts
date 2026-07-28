@@ -563,6 +563,7 @@ export interface MatchFeedbackStats {
 
 export interface MatchFeedbackItem {
   id: string;
+  userId: string;
   jobPostingId: string;
   isAccurate: boolean;
   reason: string | null;

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import {
   Loader2,
   Users,
@@ -290,9 +291,16 @@ function AdminDashboardContent() {
                         ? `${item.jobPosting.institutionName} - ${item.jobPosting.positionTitle}`
                         : 'İlan bulunamadı'}
                     </p>
-                    <p className="truncate text-xs text-slate-500">
-                      {item.user ? `${item.user.fullName} (${item.user.email})` : 'Kullanıcı bulunamadı'}
-                    </p>
+                    {item.user ? (
+                      <Link
+                        href={`/admin/kullanicilar/${item.userId}`}
+                        className="truncate text-xs text-brand-600 hover:underline"
+                      >
+                        {item.user.fullName} ({item.user.email})
+                      </Link>
+                    ) : (
+                      <p className="truncate text-xs text-slate-500">Kullanıcı bulunamadı</p>
+                    )}
                     {item.reason && <p className="truncate text-xs text-slate-500">{item.reason}</p>}
                   </div>
                   {item.isAccurate ? (
