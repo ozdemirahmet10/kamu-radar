@@ -11,3 +11,4 @@ coverage/
 .idea/
 prisma/dev.db
 minio-data/
+*.tsbuildinfo
