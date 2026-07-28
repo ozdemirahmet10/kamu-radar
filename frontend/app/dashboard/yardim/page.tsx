@@ -369,45 +369,49 @@ export default function HelpCenterPage() {
             </div>
           </Card>
 
-          <Card>
-            <h2 className="flex items-center gap-2 text-base font-semibold text-slate-900">
-              <Mail size={18} className="text-brand-600" />
-              İletişim & Destek
-            </h2>
-            <p className="mt-1 text-sm text-slate-500">
-              Görüşünüzü, talebinizi veya önerinizi aşağıdaki formdan iletebilirsiniz — doğrudan
-              destek ekibimize e-posta olarak ulaşır.
-            </p>
-            <div className="mt-4">
-              <SupportRequestForm />
-            </div>
-            <p className="mt-4 flex items-start gap-1.5 border-t border-slate-100 pt-4 text-xs text-slate-500">
-              <ShieldCheck size={14} className="mt-0.5 shrink-0 text-slate-400" />
-              Bir ilanın size uygun önerilip önerilmediğini düşünüyorsanız, &quot;Bana Uygun
-              İlanlar&quot; sayfasındaki 👍/👎 geri bildirim butonlarını kullanarak bize doğrudan
-              bildirebilirsiniz.
-            </p>
-          </Card>
-        </div>
+          <div className="space-y-6">
+            <Card>
+              <h2 className="flex items-center gap-2 text-base font-semibold text-slate-900">
+                <Mail size={18} className="text-brand-600" />
+                İletişim & Destek
+              </h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Görüşünüzü, talebinizi veya önerinizi aşağıdaki formdan iletebilirsiniz —
+                doğrudan destek ekibimize e-posta olarak ulaşır.
+              </p>
+              <div className="mt-4">
+                <SupportRequestForm />
+              </div>
+              <p className="mt-4 flex items-start gap-1.5 border-t border-slate-100 pt-4 text-xs text-slate-500">
+                <ShieldCheck size={14} className="mt-0.5 shrink-0 text-slate-400" />
+                Bir ilanın size uygun önerilip önerilmediğini düşünüyorsanız, &quot;Bana Uygun
+                İlanlar&quot; sayfasındaki 👍/👎 geri bildirim butonlarını kullanarak bize
+                doğrudan bildirebilirsiniz.
+              </p>
+            </Card>
 
-        <Card>
-          <h2 className="text-base font-semibold text-slate-900">Hesap İşlemleri Kısayolları</h2>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {SHORTCUT_LINKS.map((link) => {
-              const Icon = link.icon;
-              return (
-                <Link
-                  key={link.label}
-                  href={link.href}
-                  className="flex items-center gap-2.5 rounded-xl border border-slate-100 px-4 py-3 text-sm font-medium text-slate-700 transition-colors hover:border-brand-200 hover:bg-brand-50/40"
-                >
-                  <Icon size={16} className="text-brand-600" />
-                  {link.label}
-                </Link>
-              );
-            })}
+            <Card>
+              <h2 className="text-base font-semibold text-slate-900">
+                Hesap İşlemleri Kısayolları
+              </h2>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                {SHORTCUT_LINKS.map((link) => {
+                  const Icon = link.icon;
+                  return (
+                    <Link
+                      key={link.label}
+                      href={link.href}
+                      className="flex items-center gap-2.5 rounded-xl border border-slate-100 px-4 py-3 text-sm font-medium text-slate-700 transition-colors hover:border-brand-200 hover:bg-brand-50/40"
+                    >
+                      <Icon size={16} className="text-brand-600" />
+                      {link.label}
+                    </Link>
+                  );
+                })}
+              </div>
+            </Card>
           </div>
-        </Card>
+        </div>
       </div>
     </DashboardShell>
   );
