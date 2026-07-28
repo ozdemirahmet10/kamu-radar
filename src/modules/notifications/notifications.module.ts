@@ -4,6 +4,8 @@ import { AppConfigService } from '@app/config';
 import { EmailModule } from '@app/email';
 import { IdentityModule } from '../identity/identity.module';
 import { MatchingModule } from '../matching/matching.module';
+import { JobCatalogModule } from '../job-catalog/job-catalog.module';
+import { InstitutionFollowsModule } from '../institution-follows/institution-follows.module';
 
 import { NOTIFICATION_REPOSITORY } from './domain/repositories/notification.repository.interface';
 import { NOTIFICATION_PREFERENCE_REPOSITORY } from './domain/repositories/notification-preference.repository.interface';
@@ -38,6 +40,8 @@ import { PushConfigController } from './presentation/controllers/push-config.con
   imports: [
     IdentityModule,
     MatchingModule,
+    JobCatalogModule,
+    InstitutionFollowsModule,
     EmailModule,
     BullModule.forRootAsync({
       inject: [AppConfigService],

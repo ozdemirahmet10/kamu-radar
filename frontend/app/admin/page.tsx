@@ -11,6 +11,8 @@ import {
   UserX,
   Trash2,
   DatabaseBackup,
+  ThumbsUp,
+  ThumbsDown,
 } from 'lucide-react';
 import { AdminShell } from '@/components/admin/admin-shell';
 import { StatCard } from '@/components/dashboard/stat-card';
@@ -20,8 +22,10 @@ import { useAuth } from '@/lib/auth-context';
 import {
   adminDashboardApi,
   adminBackupApi,
+  adminMatchFeedbackApi,
   AdminDashboardStats,
   BackupObject,
+  MatchFeedbackOverview,
   ApiError,
 } from '@/lib/api-client';
 
@@ -51,6 +55,9 @@ function AdminDashboardContent() {
   const [isTriggeringBackup, setIsTriggeringBackup] = useState(false);
   const [backupError, setBackupError] = useState<string | null>(null);
 
+  const [feedbackOverview, setFeedbackOverview] = useState<MatchFeedbackOverview | null>(null);
+  const [isLoadingFeedback, setIsLoadingFeedback] = useState(true);
+
   useEffect(() => {
     if (!accessToken) return;
     adminDashboardApi
@@ -69,6 +76,14 @@ function AdminDashboardContent() {
   };
 
   useEffect(loadBackups, [accessToken]);
+
+  useEffect(() => {
+    if (!accessToken) return;
+    adminMatchFeedbackApi
+      .overview(accessToken)
+      .then(setFeedbackOverview)
+      .finally(() => setIsLoadingFeedback(false));
+  }, [accessToken]);
 
   const handleTriggerBackup = async () => {
     if (!accessToken || isTriggeringBackup) return;
@@ -244,6 +259,50 @@ function AdminDashboardContent() {
           </div>
         </Card>
       </div>
+
+      <Card>
+        <h2 className="text-base font-semibold text-slate-900">Eşleştirme Geri Bildirimi</h2>
+        <p className="mt-1 text-xs text-slate-500">
+          Kullanıcıların &quot;bu eşleştirme doğru muydu?&quot; sorusuna verdiği yanıtlar.
+        </p>
+        {isLoadingFeedback ? (
+          <div className="flex justify-center py-6">
+            <Loader2 className="animate-spin text-brand-600" size={20} />
+          </div>
+        ) : !feedbackOverview || feedbackOverview.stats.accurate + feedbackOverview.stats.inaccurate === 0 ? (
+          <p className="mt-4 text-sm text-slate-400">Henüz geri bildirim gelmedi.</p>
+        ) : (
+          <>
+            <div className="mt-4 flex gap-6 text-sm">
+              <span className="flex items-center gap-1.5 text-success-700">
+                <ThumbsUp size={14} /> Doğru: <strong>{feedbackOverview.stats.accurate}</strong>
+              </span>
+              <span className="flex items-center gap-1.5 text-danger-700">
+                <ThumbsDown size={14} /> Yanlış: <strong>{feedbackOverview.stats.inaccurate}</strong>
+              </span>
+            </div>
+            <div className="mt-4 max-h-80 divide-y divide-slate-100 overflow-y-auto">
+              {feedbackOverview.recent.map((item) => (
+                <div key={item.id} className="flex items-center justify-between gap-3 py-2 text-sm">
+                  <div className="min-w-0">
+                    <p className="truncate font-medium text-slate-900">
+                      {item.jobPosting
+                        ? `${item.jobPosting.institutionName} - ${item.jobPosting.positionTitle}`
+                        : 'İlan bulunamadı'}
+                    </p>
+                    {item.reason && <p className="truncate text-xs text-slate-500">{item.reason}</p>}
+                  </div>
+                  {item.isAccurate ? (
+                    <ThumbsUp size={16} className="shrink-0 text-success-600" />
+                  ) : (
+                    <ThumbsDown size={16} className="shrink-0 text-danger-600" />
+                  )}
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </Card>
     </div>
   );
 }

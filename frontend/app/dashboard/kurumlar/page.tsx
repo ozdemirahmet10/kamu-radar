@@ -2,15 +2,17 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Building2, Loader2, MapPin } from 'lucide-react';
+import { Bell, BellOff, Building2, Loader2, MapPin } from 'lucide-react';
 import { DashboardShell } from '@/components/dashboard/dashboard-shell';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { IconTile } from '@/components/ui/icon-tile';
 import { Pagination } from '@/components/dashboard/pagination';
+import { useAuth } from '@/lib/auth-context';
 import {
   citiesApi,
   institutionsApi,
+  institutionFollowsApi,
   City,
   Institution,
   InstitutionType,
@@ -24,6 +26,7 @@ function formatDate(iso: string): string {
 }
 
 function InstitutionsContent() {
+  const { accessToken } = useAuth();
   const [institutions, setInstitutions] = useState<Institution[]>([]);
   const [cities, setCities] = useState<City[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -34,12 +37,52 @@ function InstitutionsContent() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  const [followedNames, setFollowedNames] = useState<Set<string>>(new Set());
+  const [togglingFollow, setTogglingFollow] = useState<string | null>(null);
 
   const cityMap = useMemo(() => new Map(cities.map((city) => [city.id, city.name])), [cities]);
 
   useEffect(() => {
     citiesApi.list().then(setCities).catch(() => undefined);
   }, []);
+
+  useEffect(() => {
+    if (!accessToken) return;
+    institutionFollowsApi
+      .list(accessToken)
+      .then((follows) => setFollowedNames(new Set(follows.map((f) => f.institutionName))))
+      .catch(() => undefined);
+  }, [accessToken]);
+
+  const handleToggleFollow = async (e: React.MouseEvent, institutionName: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!accessToken || togglingFollow) return;
+    const isFollowing = followedNames.has(institutionName);
+    setTogglingFollow(institutionName);
+    setFollowedNames((prev) => {
+      const next = new Set(prev);
+      if (isFollowing) next.delete(institutionName);
+      else next.add(institutionName);
+      return next;
+    });
+    try {
+      if (isFollowing) {
+        await institutionFollowsApi.unfollow(institutionName, accessToken);
+      } else {
+        await institutionFollowsApi.follow(institutionName, accessToken);
+      }
+    } catch {
+      setFollowedNames((prev) => {
+        const next = new Set(prev);
+        if (isFollowing) next.add(institutionName);
+        else next.delete(institutionName);
+        return next;
+      });
+    } finally {
+      setTogglingFollow(null);
+    }
+  };
 
   const fetchInstitutions = async (targetPage: number) => {
     setIsLoading(true);
@@ -157,6 +200,26 @@ function InstitutionsContent() {
                       </Badge>
                     )}
                   </div>
+                  <button
+                    type="button"
+                    onClick={(e) => handleToggleFollow(e, institution.institutionName)}
+                    className={
+                      followedNames.has(institution.institutionName)
+                        ? 'shrink-0 text-brand-600'
+                        : 'shrink-0 text-slate-300 hover:text-brand-600'
+                    }
+                    aria-label={
+                      followedNames.has(institution.institutionName)
+                        ? 'Kurum takibini bırak'
+                        : 'Kurumu takip et'
+                    }
+                  >
+                    {followedNames.has(institution.institutionName) ? (
+                      <Bell size={18} fill="currentColor" />
+                    ) : (
+                      <BellOff size={18} />
+                    )}
+                  </button>
                 </div>
 
                 <div className="mt-4 grid grid-cols-2 gap-3 text-sm">

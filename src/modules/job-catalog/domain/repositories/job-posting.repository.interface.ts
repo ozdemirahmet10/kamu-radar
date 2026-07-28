@@ -44,6 +44,13 @@ export interface InstitutionAggregationRow {
   applicationEndDate: Date | null;
 }
 
+export interface RecentInstitutionPostingRow {
+  id: string;
+  institutionName: string;
+  positionTitle: string;
+  createdAt: Date;
+}
+
 export interface IJobPostingRepository {
   findById(id: string): Promise<JobPosting | null>;
   findByIds(ids: string[]): Promise<JobPosting[]>;
@@ -55,4 +62,9 @@ export interface IJobPostingRepository {
   findExpiredWithPdf(referenceDate: Date): Promise<JobPosting[]>;
   /** Kurumlar sayfası için — hâlâ aktif (yayında, süresi geçmemiş) ilanların kurum bazlı ham satırları. */
   findActiveForInstitutionAggregation(referenceDate: Date): Promise<InstitutionAggregationRow[]>;
+  /** Takip edilen kurum bildirimleri için — belirtilen kurumlardan, belirtilen tarihten sonra yayınlanan ilanlar. */
+  findRecentByInstitutionNames(
+    institutionNames: string[],
+    since: Date,
+  ): Promise<RecentInstitutionPostingRow[]>;
 }

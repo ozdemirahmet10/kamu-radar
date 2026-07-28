@@ -15,6 +15,7 @@ import {
   InstitutionAggregationRow,
   ListJobPostingsFilter,
   ListJobPostingsResult,
+  RecentInstitutionPostingRow,
 } from '../domain/repositories/job-posting.repository.interface';
 
 type JobPostingWithRelations = Prisma.JobPostingGetPayload<{
@@ -267,6 +268,21 @@ export class PrismaJobPostingRepository implements IJobPostingRepository {
       quotaCount: record.quotaCount,
       applicationEndDate: record.applicationEndDate,
     }));
+  }
+
+  async findRecentByInstitutionNames(
+    institutionNames: string[],
+    since: Date,
+  ): Promise<RecentInstitutionPostingRow[]> {
+    if (institutionNames.length === 0) return [];
+    return this.prisma.jobPosting.findMany({
+      where: {
+        institutionName: { in: institutionNames },
+        status: 'PUBLISHED',
+        createdAt: { gte: since },
+      },
+      select: { id: true, institutionName: true, positionTitle: true, createdAt: true },
+    });
   }
 
   private toDomain(record: JobPostingWithRelations): JobPosting {

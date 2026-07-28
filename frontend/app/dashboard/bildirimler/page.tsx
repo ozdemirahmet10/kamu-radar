@@ -15,6 +15,7 @@ const PAGE_SIZE = 10;
 const TYPE_ICON: Record<NotificationType, typeof Sparkles> = {
   NEW_MATCH: Sparkles,
   DEADLINE_SOON: CalendarClock,
+  NEW_FROM_FOLLOWED_INSTITUTION: Bell,
 };
 
 function timeAgo(iso: string): string {

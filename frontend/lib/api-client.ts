@@ -515,7 +515,62 @@ export const favoritesApi = {
     apiFetch<void>(`/me/favorites/${jobPostingId}`, { method: 'DELETE', accessToken }),
 };
 
-export type NotificationType = 'NEW_MATCH' | 'DEADLINE_SOON';
+export interface InstitutionFollow {
+  institutionName: string;
+  createdAt: string;
+}
+
+export const institutionFollowsApi = {
+  list: (accessToken: string) =>
+    apiFetch<InstitutionFollow[]>('/me/institution-follows', { accessToken }),
+
+  follow: (institutionName: string, accessToken: string) =>
+    apiFetch<void>(`/me/institution-follows/${encodeURIComponent(institutionName)}`, {
+      method: 'POST',
+      accessToken,
+    }),
+
+  unfollow: (institutionName: string, accessToken: string) =>
+    apiFetch<void>(`/me/institution-follows/${encodeURIComponent(institutionName)}`, {
+      method: 'DELETE',
+      accessToken,
+    }),
+};
+
+export const matchFeedbackApi = {
+  submit: (jobPostingId: string, isAccurate: boolean, reason: string | undefined, accessToken: string) =>
+    apiFetch<void>(`/me/matches/${jobPostingId}/feedback`, {
+      method: 'POST',
+      body: JSON.stringify({ isAccurate, reason }),
+      accessToken,
+    }),
+};
+
+export interface MatchFeedbackStats {
+  accurate: number;
+  inaccurate: number;
+}
+
+export interface MatchFeedbackItem {
+  id: string;
+  jobPostingId: string;
+  isAccurate: boolean;
+  reason: string | null;
+  createdAt: string;
+  jobPosting: { institutionName: string; positionTitle: string } | null;
+}
+
+export interface MatchFeedbackOverview {
+  stats: MatchFeedbackStats;
+  recent: MatchFeedbackItem[];
+}
+
+export const adminMatchFeedbackApi = {
+  overview: (accessToken: string) =>
+    apiFetch<MatchFeedbackOverview>('/admin/match-feedback', { accessToken }),
+};
+
+export type NotificationType = 'NEW_MATCH' | 'DEADLINE_SOON' | 'NEW_FROM_FOLLOWED_INSTITUTION';
 
 export interface NotificationRecord {
   id: string;

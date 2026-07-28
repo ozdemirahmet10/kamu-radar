@@ -25,6 +25,14 @@ import {
 import { EMAIL_SENDER, IEmailSender } from '@app/email';
 import { PUSH_SENDER, IPushSender } from '../ports/push-sender.port';
 import { buildNotificationEmailHtml } from '../services/notification-email.template';
+import {
+  IInstitutionFollowRepository,
+  INSTITUTION_FOLLOW_REPOSITORY,
+} from '../../../institution-follows/domain/repositories/institution-follow.repository.interface';
+import {
+  IJobPostingRepository,
+  JOB_POSTING_REPOSITORY,
+} from '../../../job-catalog/domain/repositories/job-posting.repository.interface';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const NEW_THRESHOLD_DAYS = 3;
@@ -57,6 +65,9 @@ export class SyncNotificationsUseCase {
     @Inject(PUSH_SUBSCRIPTION_REPOSITORY)
     private readonly pushSubscriptionRepository: IPushSubscriptionRepository,
     @Inject(PUSH_SENDER) private readonly pushSender: IPushSender,
+    @Inject(INSTITUTION_FOLLOW_REPOSITORY)
+    private readonly institutionFollowRepository: IInstitutionFollowRepository,
+    @Inject(JOB_POSTING_REPOSITORY) private readonly jobPostingRepository: IJobPostingRepository,
     private readonly configService: AppConfigService,
   ) {}
 
@@ -156,6 +167,29 @@ export class SyncNotificationsUseCase {
             message: `${institutionName} - ${positionTitle} için son başvuru tarihi yaklaşıyor`,
           },
           match.jobPosting.id,
+        );
+      }
+    }
+
+    const followedInstitutions = await this.institutionFollowRepository.listInstitutionNamesByUser(
+      userId,
+    );
+    if (followedInstitutions.length > 0) {
+      const since = new Date(now - NEW_THRESHOLD_DAYS * DAY_MS);
+      const recentPostings = await this.jobPostingRepository.findRecentByInstitutionNames(
+        followedInstitutions,
+        since,
+      );
+      for (const posting of recentPostings) {
+        handleCandidate(
+          {
+            userId,
+            jobPostingId: posting.id,
+            type: 'NEW_FROM_FOLLOWED_INSTITUTION',
+            title: 'Takip ettiğiniz kurumdan yeni ilan',
+            message: `${posting.institutionName} - ${posting.positionTitle}`,
+          },
+          posting.id,
         );
       }
     }

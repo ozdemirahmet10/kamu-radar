@@ -1,6 +1,6 @@
 export const NOTIFICATION_REPOSITORY = Symbol('NOTIFICATION_REPOSITORY');
 
-export type NotificationType = 'NEW_MATCH' | 'DEADLINE_SOON';
+export type NotificationType = 'NEW_MATCH' | 'DEADLINE_SOON' | 'NEW_FROM_FOLLOWED_INSTITUTION';
 
 export interface NotificationCandidate {
   userId: string;

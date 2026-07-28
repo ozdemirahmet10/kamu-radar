@@ -40,6 +40,8 @@ model User {
   applications          JobApplication[]
   verificationTokens    VerificationToken[]
   pushSubscriptions     PushSubscription[]
+  institutionFollows    InstitutionFollow[]
+  matchFeedback         MatchFeedback[]
 
   @@map("users")
 }
@@ -335,6 +337,7 @@ model JobPosting {
   notificationLogs    NotificationLog[]
   favoritedBy         JobPostingFavorite[]
   applications        JobApplication[]
+  matchFeedback       MatchFeedback[]
 
   @@index([kpssScoreType, cityId, status])
   @@index([institutionType, employmentType, minimumEducationLevel])
@@ -353,6 +356,35 @@ model JobPostingFavorite {
   @@unique([userId, jobPostingId])
   @@index([userId])
   @@map("job_posting_favorites")
+}
+
+model InstitutionFollow {
+  id              String   @id @default(uuid())
+  userId          String   @map("user_id")
+  institutionName String   @map("institution_name")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, institutionName])
+  @@index([userId])
+  @@map("institution_follows")
+}
+
+model MatchFeedback {
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  jobPostingId String   @map("job_posting_id")
+  isAccurate   Boolean  @map("is_accurate")
+  reason       String?
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobPosting JobPosting @relation(fields: [jobPostingId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, jobPostingId])
+  @@index([jobPostingId])
+  @@map("match_feedback")
 }
 
 enum ApplicationStatus {
@@ -478,6 +510,7 @@ enum NotificationStatus {
 enum NotificationType {
   NEW_MATCH
   DEADLINE_SOON
+  NEW_FROM_FOLLOWED_INSTITUTION
 }
 
 model NotificationLog {
