@@ -3,7 +3,6 @@
     "require": ["tsconfig-paths/register"]
   },
   "compilerOptions": {
-    "ignoreDeprecations": "5.0",
     "module": "commonjs",
     "declaration": false,
     "removeComments": true,
@@ -22,7 +21,7 @@
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
     "resolveJsonModule": true,
-    "moduleResolution": "node",
+    "moduleResolution": "node10",
     "esModuleInterop": true,
     "paths": {
       "@app/shared-kernel": ["libs/shared-kernel/src"],
