@@ -1,12 +1,29 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Loader2, Users, ClipboardList, ShieldAlert, Radar, UserX, Trash2 } from 'lucide-react';
+import {
+  Loader2,
+  Users,
+  ClipboardList,
+  ShieldAlert,
+  ShieldCheck,
+  Radar,
+  UserX,
+  Trash2,
+  DatabaseBackup,
+} from 'lucide-react';
 import { AdminShell } from '@/components/admin/admin-shell';
 import { StatCard } from '@/components/dashboard/stat-card';
 import { Card } from '@/components/ui/card';
+import { TrendLineChart } from '@/components/admin/trend-line-chart';
 import { useAuth } from '@/lib/auth-context';
-import { adminDashboardApi, AdminDashboardStats } from '@/lib/api-client';
+import {
+  adminDashboardApi,
+  adminBackupApi,
+  AdminDashboardStats,
+  BackupObject,
+  ApiError,
+} from '@/lib/api-client';
 
 const STATUS_LABELS: Record<string, string> = {
   DRAFT: 'Taslak',
@@ -16,10 +33,23 @@ const STATUS_LABELS: Record<string, string> = {
   PENDING_REVIEW: 'İncelemede',
 };
 
+const MATCH_STATUSES = ['ELIGIBLE', 'PARTIALLY_ELIGIBLE', 'NOT_ELIGIBLE'] as const;
+
+const MATCH_STATUS_META: Record<(typeof MATCH_STATUSES)[number], { label: string; badge: string; dot: string }> = {
+  ELIGIBLE: { label: 'Uygun', badge: 'text-success-700', dot: 'bg-success-600' },
+  PARTIALLY_ELIGIBLE: { label: 'Kısmen Uygun', badge: 'text-warning-700', dot: 'bg-warning-600' },
+  NOT_ELIGIBLE: { label: 'Uygun Değil', badge: 'text-danger-700', dot: 'bg-danger-600' },
+};
+
 function AdminDashboardContent() {
   const { accessToken } = useAuth();
   const [stats, setStats] = useState<AdminDashboardStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  const [backups, setBackups] = useState<BackupObject[]>([]);
+  const [isLoadingBackups, setIsLoadingBackups] = useState(true);
+  const [isTriggeringBackup, setIsTriggeringBackup] = useState(false);
+  const [backupError, setBackupError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!accessToken) return;
@@ -28,6 +58,31 @@ function AdminDashboardContent() {
       .then(setStats)
       .finally(() => setIsLoading(false));
   }, [accessToken]);
+
+  const loadBackups = () => {
+    if (!accessToken) return;
+    setIsLoadingBackups(true);
+    adminBackupApi
+      .list(accessToken)
+      .then(setBackups)
+      .finally(() => setIsLoadingBackups(false));
+  };
+
+  useEffect(loadBackups, [accessToken]);
+
+  const handleTriggerBackup = async () => {
+    if (!accessToken || isTriggeringBackup) return;
+    setIsTriggeringBackup(true);
+    setBackupError(null);
+    try {
+      await adminBackupApi.trigger(accessToken);
+      loadBackups();
+    } catch (err) {
+      setBackupError(err instanceof ApiError ? err.message : 'Yedekleme başlatılamadı.');
+    } finally {
+      setIsTriggeringBackup(false);
+    }
+  };
 
   if (isLoading || !stats) {
     return (
@@ -98,6 +153,94 @@ function AdminDashboardContent() {
               </span>
               <span className="font-semibold text-slate-900">{stats.crawler.failedRuns}</span>
             </div>
+            <div className="flex items-center justify-between border-t border-slate-100 pt-3">
+              <span className="text-slate-600">Son 7 Gün Başarı Oranı</span>
+              <span className="font-semibold text-slate-900">
+                {stats.crawler.last7Days.successRate === null
+                  ? 'Tarama yok'
+                  : `%${stats.crawler.last7Days.successRate} (${stats.crawler.last7Days.successful}/${stats.crawler.last7Days.total})`}
+              </span>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card>
+          <h2 className="text-base font-semibold text-slate-900">Eşleşme Dağılımı</h2>
+          <p className="mt-1 text-xs text-slate-500">
+            Şu ana kadar hesaplanan tüm kullanıcı-ilan eşleşmelerinin uygunluk durumu.
+          </p>
+          <div className="mt-4 space-y-3">
+            {MATCH_STATUSES.map((status) => {
+              const meta = MATCH_STATUS_META[status];
+              return (
+                <div key={status} className="flex items-center justify-between text-sm">
+                  <span className="flex items-center gap-2 text-slate-600">
+                    <span className={`h-2.5 w-2.5 rounded-full ${meta.dot}`} />
+                    {meta.label}
+                  </span>
+                  <span className={`font-semibold ${meta.badge}`}>{stats.matches[status]}</span>
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+
+        <Card>
+          <h2 className="flex items-center gap-2 text-base font-semibold text-slate-900">
+            <DatabaseBackup size={18} className="text-brand-600" />
+            Veritabanı Yedekleri
+          </h2>
+          <p className="mt-1 text-xs text-slate-500">
+            Her gece 04:00&apos;te otomatik alınır, 14 günden eskisi otomatik silinir.
+          </p>
+          {backupError && <p className="mt-2 text-sm text-danger-600">{backupError}</p>}
+          {isLoadingBackups ? (
+            <div className="flex justify-center py-6">
+              <Loader2 className="animate-spin text-brand-600" size={20} />
+            </div>
+          ) : backups.length === 0 ? (
+            <p className="mt-4 text-sm text-slate-400">Henüz yedek alınmadı.</p>
+          ) : (
+            <div className="mt-4 divide-y divide-slate-100">
+              {backups.slice(0, 5).map((backup) => (
+                <div key={backup.key} className="flex items-center justify-between py-2 text-sm">
+                  <span className="flex items-center gap-1.5 text-slate-600">
+                    <ShieldCheck size={14} className="text-success-600" />
+                    {backup.key.replace('backups/', '')}
+                  </span>
+                  <span className="text-xs text-slate-400">
+                    {new Date(backup.lastModified).toLocaleString('tr-TR')}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+          <button
+            type="button"
+            onClick={handleTriggerBackup}
+            disabled={isTriggeringBackup}
+            className="mt-4 inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+          >
+            {isTriggeringBackup ? <Loader2 className="animate-spin" size={16} /> : <DatabaseBackup size={16} />}
+            {isTriggeringBackup ? 'Yedekleniyor...' : 'Şimdi Yedekle'}
+          </button>
+        </Card>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card>
+          <h2 className="text-base font-semibold text-slate-900">Yeni Kullanıcılar (Son {stats.trends.days} Gün)</h2>
+          <div className="mt-4">
+            <TrendLineChart data={stats.trends.newUsers} label="Yeni kullanıcılar" />
+          </div>
+        </Card>
+
+        <Card>
+          <h2 className="text-base font-semibold text-slate-900">Yeni İlanlar (Son {stats.trends.days} Gün)</h2>
+          <div className="mt-4">
+            <TrendLineChart data={stats.trends.newJobPostings} label="Yeni ilanlar" />
           </div>
         </Card>
       </div>

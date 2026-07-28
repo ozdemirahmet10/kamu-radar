@@ -71,5 +71,6 @@ import { JobPostingPdfController } from './presentation/controllers/job-posting-
     PdfCleanupProcessor,
     PdfCleanupSchedulerService,
   ],
+  exports: [RAW_CONTENT_STORE],
 })
 export class CrawlerModule {}

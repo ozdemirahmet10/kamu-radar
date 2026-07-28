@@ -16,6 +16,7 @@ FROM node:20-alpine AS runtime
 ENV NODE_ENV=production
 WORKDIR /usr/src/app
 
+RUN apk add --no-cache postgresql16-client
 RUN addgroup -S app && adduser -S app -G app
 COPY package*.json ./
 COPY prisma ./prisma

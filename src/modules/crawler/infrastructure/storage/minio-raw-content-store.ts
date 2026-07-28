@@ -4,11 +4,15 @@ import {
   DeleteObjectCommand,
   GetObjectCommand,
   HeadBucketCommand,
+  ListObjectsV2Command,
   PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
 import { AppConfigService } from '@app/config';
-import { IRawContentStore } from '../../application/ports/raw-content-store.port';
+import {
+  IRawContentStore,
+  RawContentStoreObject,
+} from '../../application/ports/raw-content-store.port';
 
 @Injectable()
 export class MinioRawContentStore implements IRawContentStore, OnModuleInit {
@@ -93,5 +97,14 @@ export class MinioRawContentStore implements IRawContentStore, OnModuleInit {
     } catch {
       return false;
     }
+  }
+
+  async listByPrefix(prefix: string): Promise<RawContentStoreObject[]> {
+    const response = await this.client.send(
+      new ListObjectsV2Command({ Bucket: this.bucket, Prefix: prefix }),
+    );
+    return (response.Contents ?? [])
+      .filter((object) => object.Key && object.LastModified)
+      .map((object) => ({ key: object.Key as string, lastModified: object.LastModified as Date }));
   }
 }

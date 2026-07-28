@@ -15,11 +15,13 @@ import { FavoritesModule } from './modules/favorites/favorites.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { ApplicationsModule } from './modules/applications/applications.module';
 import { DataExportModule } from './modules/data-export/data-export.module';
+import { BackupModule } from './modules/backup/backup.module';
 import { HealthController } from './common/controllers/health.controller';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { ResponseEnvelopeInterceptor } from './common/interceptors/response-envelope.interceptor';
 import { AuditLogModule } from './common/audit/audit-log.module';
 import { AdminDashboardModule } from './common/dashboard/admin-dashboard.module';
+import { MetricsModule } from './common/metrics/metrics.module';
 
 @Module({
   imports: [
@@ -36,6 +38,7 @@ import { AdminDashboardModule } from './common/dashboard/admin-dashboard.module'
     }),
     AuditLogModule,
     AdminDashboardModule,
+    MetricsModule,
     IdentityModule,
     JobCatalogModule,
     ReferenceDataModule,
@@ -45,6 +48,7 @@ import { AdminDashboardModule } from './common/dashboard/admin-dashboard.module'
     NotificationsModule,
     ApplicationsModule,
     DataExportModule,
+    BackupModule,
   ],
   controllers: [HealthController],
   providers: [

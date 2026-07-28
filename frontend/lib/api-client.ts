@@ -942,8 +942,43 @@ export interface AdminDashboardStats {
     totalSources: number;
     activeSources: number;
     failedRuns: number;
+    last7Days: {
+      total: number;
+      successful: number;
+      partial: number;
+      failed: number;
+      successRate: number | null;
+    };
+  };
+  matches: {
+    ELIGIBLE: number;
+    PARTIALLY_ELIGIBLE: number;
+    NOT_ELIGIBLE: number;
+  };
+  trends: {
+    days: number;
+    newUsers: Array<{ date: string; count: number }>;
+    newJobPostings: Array<{ date: string; count: number }>;
   };
 }
+
+export interface BackupObject {
+  key: string;
+  lastModified: string;
+}
+
+export interface DatabaseBackupResult {
+  key: string;
+  sizeBytes: number;
+  prunedCount: number;
+}
+
+export const adminBackupApi = {
+  list: (accessToken: string) => apiFetch<BackupObject[]>('/admin/backups', { accessToken }),
+
+  trigger: (accessToken: string) =>
+    apiFetch<DatabaseBackupResult>('/admin/backups/trigger', { method: 'POST', accessToken }),
+};
 
 export interface AdminQualificationCode {
   id: string;
