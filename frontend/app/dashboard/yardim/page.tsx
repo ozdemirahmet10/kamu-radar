@@ -350,43 +350,45 @@ export default function HelpCenterPage() {
           </div>
         </Card>
 
-        <Card>
-          <h2 className="text-base font-semibold text-slate-900">Sık Sorulan Sorular</h2>
-          <div className="mt-4 space-y-6">
-            {FAQ_GROUPS.map((group) => (
-              <div key={group.title}>
-                <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                  {group.title}
-                </h3>
-                <div className="mt-2">
-                  {group.items.map((item) => (
-                    <FaqAccordionItem key={item.question} item={item} />
-                  ))}
+        <div className="grid gap-6 lg:grid-cols-2">
+          <Card>
+            <h2 className="text-base font-semibold text-slate-900">Sık Sorulan Sorular</h2>
+            <div className="mt-4 max-h-[520px] space-y-6 overflow-y-auto pr-1">
+              {FAQ_GROUPS.map((group) => (
+                <div key={group.title}>
+                  <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    {group.title}
+                  </h3>
+                  <div className="mt-2">
+                    {group.items.map((item) => (
+                      <FaqAccordionItem key={item.question} item={item} />
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        </Card>
+              ))}
+            </div>
+          </Card>
 
-        <Card>
-          <h2 className="flex items-center gap-2 text-base font-semibold text-slate-900">
-            <Mail size={18} className="text-brand-600" />
-            İletişim & Destek
-          </h2>
-          <p className="mt-1 text-sm text-slate-500">
-            Görüşünüzü, talebinizi veya önerinizi aşağıdaki formdan iletebilirsiniz — doğrudan
-            destek ekibimize e-posta olarak ulaşır.
-          </p>
-          <div className="mt-4">
-            <SupportRequestForm />
-          </div>
-          <p className="mt-4 flex items-start gap-1.5 border-t border-slate-100 pt-4 text-xs text-slate-500">
-            <ShieldCheck size={14} className="mt-0.5 shrink-0 text-slate-400" />
-            Bir ilanın size uygun önerilip önerilmediğini düşünüyorsanız, &quot;Bana Uygun
-            İlanlar&quot; sayfasındaki 👍/👎 geri bildirim butonlarını kullanarak bize doğrudan
-            bildirebilirsiniz.
-          </p>
-        </Card>
+          <Card>
+            <h2 className="flex items-center gap-2 text-base font-semibold text-slate-900">
+              <Mail size={18} className="text-brand-600" />
+              İletişim & Destek
+            </h2>
+            <p className="mt-1 text-sm text-slate-500">
+              Görüşünüzü, talebinizi veya önerinizi aşağıdaki formdan iletebilirsiniz — doğrudan
+              destek ekibimize e-posta olarak ulaşır.
+            </p>
+            <div className="mt-4">
+              <SupportRequestForm />
+            </div>
+            <p className="mt-4 flex items-start gap-1.5 border-t border-slate-100 pt-4 text-xs text-slate-500">
+              <ShieldCheck size={14} className="mt-0.5 shrink-0 text-slate-400" />
+              Bir ilanın size uygun önerilip önerilmediğini düşünüyorsanız, &quot;Bana Uygun
+              İlanlar&quot; sayfasındaki 👍/👎 geri bildirim butonlarını kullanarak bize doğrudan
+              bildirebilirsiniz.
+            </p>
+          </Card>
+        </div>
 
         <Card>
           <h2 className="text-base font-semibold text-slate-900">Hesap İşlemleri Kısayolları</h2>
