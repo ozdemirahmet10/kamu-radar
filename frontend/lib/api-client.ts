@@ -539,6 +539,11 @@ export const institutionFollowsApi = {
     }),
 };
 
+export interface MyMatchFeedback {
+  jobPostingId: string;
+  isAccurate: boolean;
+}
+
 export const matchFeedbackApi = {
   submit: (jobPostingId: string, isAccurate: boolean, reason: string | undefined, accessToken: string) =>
     apiFetch<void>(`/me/matches/${jobPostingId}/feedback`, {
@@ -546,6 +551,9 @@ export const matchFeedbackApi = {
       body: JSON.stringify({ isAccurate, reason }),
       accessToken,
     }),
+
+  listMine: (accessToken: string) =>
+    apiFetch<MyMatchFeedback[]>('/me/matches/feedback', { accessToken }),
 };
 
 export interface MatchFeedbackStats {

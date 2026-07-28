@@ -4,6 +4,7 @@ import {
   IMatchFeedbackRepository,
   MatchFeedbackRecord,
   MatchFeedbackStats,
+  MyMatchFeedbackRecord,
 } from '../domain/repositories/match-feedback.repository.interface';
 
 @Injectable()
@@ -36,6 +37,13 @@ export class PrismaMatchFeedbackRepository implements IMatchFeedbackRepository {
       orderBy: { createdAt: 'desc' },
       take: limit,
       select: { id: true, jobPostingId: true, isAccurate: true, reason: true, createdAt: true },
+    });
+  }
+
+  async listByUser(userId: string): Promise<MyMatchFeedbackRecord[]> {
+    return this.prisma.matchFeedback.findMany({
+      where: { userId },
+      select: { jobPostingId: true, isAccurate: true },
     });
   }
 }

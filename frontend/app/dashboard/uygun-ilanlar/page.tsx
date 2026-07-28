@@ -15,6 +15,7 @@ import {
   citiesApi,
   favoritesApi,
   matchesApi,
+  matchFeedbackApi,
   City,
   EligibilityStatus,
   MatchedJobPosting,
@@ -55,6 +56,7 @@ function MatchedJobsContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [filters, setFilters] = useState(EMPTY_JOB_FILTERS);
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
+  const [feedbackByJobId, setFeedbackByJobId] = useState<Map<string, boolean>>(new Map());
   const [error, setError] = useState<string | null>(null);
 
   const cityMap = useMemo(() => new Map(cities.map((city) => [city.id, city])), [cities]);
@@ -68,6 +70,16 @@ function MatchedJobsContent() {
     favoritesApi
       .listIds(accessToken)
       .then((ids) => setFavoriteIds(new Set(ids)))
+      .catch(() => undefined);
+  }, [accessToken]);
+
+  useEffect(() => {
+    if (!accessToken) return;
+    matchFeedbackApi
+      .listMine(accessToken)
+      .then((items) =>
+        setFeedbackByJobId(new Map(items.map((item) => [item.jobPostingId, item.isAccurate]))),
+      )
       .catch(() => undefined);
   }, [accessToken]);
 
@@ -165,6 +177,7 @@ function MatchedJobsContent() {
                   city={match.jobPosting.cityId ? cityMap.get(match.jobPosting.cityId) : undefined}
                   isFavorite={favoriteIds.has(match.jobPosting.id)}
                   onFavoriteChange={handleFavoriteChange}
+                  feedbackGiven={feedbackByJobId.get(match.jobPosting.id) ?? null}
                 />
               ))
             )}

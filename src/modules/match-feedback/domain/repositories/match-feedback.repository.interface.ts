@@ -13,6 +13,11 @@ export interface MatchFeedbackStats {
   inaccurate: number;
 }
 
+export interface MyMatchFeedbackRecord {
+  jobPostingId: string;
+  isAccurate: boolean;
+}
+
 export interface IMatchFeedbackRepository {
   submit(
     userId: string,
@@ -22,4 +27,6 @@ export interface IMatchFeedbackRepository {
   ): Promise<void>;
   getStats(): Promise<MatchFeedbackStats>;
   listRecent(limit: number): Promise<MatchFeedbackRecord[]>;
+  /** Kullanıcının kendi verdiği geri bildirimler — sayfa yeniden yüklendiğinde ikonların doğru durumu göstermesi için. */
+  listByUser(userId: string): Promise<MyMatchFeedbackRecord[]>;
 }

@@ -24,11 +24,13 @@ export function MatchedJobItem({
   city,
   isFavorite: isFavoriteProp = false,
   onFavoriteChange,
+  feedbackGiven: feedbackGivenProp = null,
 }: {
   match: MatchedJobPosting;
   city: City | undefined;
   isFavorite?: boolean;
   onFavoriteChange?: (jobPostingId: string, isFavorite: boolean) => void;
+  feedbackGiven?: boolean | null;
 }) {
   const router = useRouter();
   const { accessToken } = useAuth();
@@ -36,10 +38,11 @@ export function MatchedJobItem({
   const statusBadge = STATUS_BADGE[match.status];
   const [isFavorite, setIsFavorite] = useState(isFavoriteProp);
   const [isToggling, setIsToggling] = useState(false);
-  const [feedbackGiven, setFeedbackGiven] = useState<boolean | null>(null);
+  const [feedbackGiven, setFeedbackGiven] = useState<boolean | null>(feedbackGivenProp);
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
 
   useEffect(() => setIsFavorite(isFavoriteProp), [isFavoriteProp]);
+  useEffect(() => setFeedbackGiven(feedbackGivenProp), [feedbackGivenProp]);
 
   const handleSubmitFeedback = async (e: React.MouseEvent, isAccurate: boolean) => {
     e.stopPropagation();
