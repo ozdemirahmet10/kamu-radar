@@ -26,6 +26,8 @@ export class JobPostingController {
       minimumEducationLevel: query.minimumEducationLevel,
       keyword: query.keyword,
       hasPdf: query.hasPdf,
+      createdAfter: query.createdAfter,
+      deadlineWithinDays: query.deadlineWithinDays,
       page: query.page,
       pageSize: query.pageSize,
       onlyPublished: true,

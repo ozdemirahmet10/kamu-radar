@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronRight, Heart } from 'lucide-react';
+import { ChevronRight, Heart, ThumbsDown, ThumbsUp } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/lib/auth-context';
-import { favoritesApi } from '@/lib/api-client';
+import { favoritesApi, matchFeedbackApi } from '@/lib/api-client';
 import type { City, MatchedJobPosting } from '@/lib/api-client';
 
 const STATUS_BADGE: Record<MatchedJobPosting['status'], { label: string; variant: 'success' | 'warning' | 'danger' }> = {
@@ -36,8 +36,22 @@ export function MatchedJobItem({
   const statusBadge = STATUS_BADGE[match.status];
   const [isFavorite, setIsFavorite] = useState(isFavoriteProp);
   const [isToggling, setIsToggling] = useState(false);
+  const [feedbackGiven, setFeedbackGiven] = useState<boolean | null>(null);
+  const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
 
   useEffect(() => setIsFavorite(isFavoriteProp), [isFavoriteProp]);
+
+  const handleSubmitFeedback = async (e: React.MouseEvent, isAccurate: boolean) => {
+    e.stopPropagation();
+    if (!accessToken || isSubmittingFeedback || feedbackGiven !== null) return;
+    setIsSubmittingFeedback(true);
+    try {
+      await matchFeedbackApi.submit(jobPosting.id, isAccurate, undefined, accessToken);
+      setFeedbackGiven(isAccurate);
+    } finally {
+      setIsSubmittingFeedback(false);
+    }
+  };
 
   const handleToggleFavorite = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -95,6 +109,32 @@ export function MatchedJobItem({
           <p className="text-xs font-semibold text-slate-700">
             {formatDate(jobPosting.applicationEndDate)}
           </p>
+        </div>
+        <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+          {feedbackGiven === null ? (
+            <>
+              <button
+                type="button"
+                onClick={(e) => handleSubmitFeedback(e, true)}
+                className="text-slate-300 hover:text-success-600"
+                aria-label="Bu eşleştirme doğruydu"
+                title="Bu eşleştirme doğruydu"
+              >
+                <ThumbsUp size={16} />
+              </button>
+              <button
+                type="button"
+                onClick={(e) => handleSubmitFeedback(e, false)}
+                className="text-slate-300 hover:text-danger-600"
+                aria-label="Bu eşleştirme doğru değildi"
+                title="Bu eşleştirme doğru değildi"
+              >
+                <ThumbsDown size={16} />
+              </button>
+            </>
+          ) : (
+            <span className="text-xs text-slate-400">Teşekkürler!</span>
+          )}
         </div>
         <button
           type="button"

@@ -2,6 +2,7 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import {
   IsBoolean,
+  IsDate,
   IsEnum,
   IsIn,
   IsInt,
@@ -70,6 +71,19 @@ export class ListJobPostingsQueryDto {
   @Transform(({ value }) => value === 'true' || value === true)
   @IsBoolean()
   hasPdf?: boolean;
+
+  @ApiPropertyOptional({ description: 'Yalnızca bu tarihten sonra eklenen ilanlar (örn. bugün eklenenler)' })
+  @IsOptional()
+  @Type(() => Date)
+  @IsDate()
+  createdAfter?: Date;
+
+  @ApiPropertyOptional({ description: 'Yalnızca son başvuru tarihi bugünden itibaren N gün içinde olan ilanlar' })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  deadlineWithinDays?: number;
 
   @ApiPropertyOptional({ default: 1 })
   @IsOptional()

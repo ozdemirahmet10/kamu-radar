@@ -21,6 +21,8 @@ export interface ListJobPostingsInput {
   minimumEducationLevel?: EducationLevel;
   keyword?: string;
   hasPdf?: boolean;
+  createdAfter?: Date;
+  deadlineWithinDays?: number;
   page?: number;
   pageSize?: number;
   onlyPublished: boolean;
@@ -46,6 +48,8 @@ export class ListJobPostingsUseCase {
       minimumEducationLevel: input.minimumEducationLevel,
       keyword: input.keyword,
       hasPdf: input.hasPdf,
+      createdAfter: input.createdAfter,
+      deadlineWithinDays: input.deadlineWithinDays,
       page: input.page ?? DEFAULT_PAGE,
       pageSize: input.pageSize ?? DEFAULT_PAGE_SIZE,
       statuses: input.onlyPublished ? [JobPostingStatus.PUBLISHED] : undefined,

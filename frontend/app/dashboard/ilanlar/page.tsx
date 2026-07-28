@@ -14,19 +14,12 @@ import {
   ApiError,
   citiesApi,
   favoritesApi,
-  matchesApi,
+  jobPostingsApi,
   City,
-  EligibilityStatus,
-  MatchedJobPosting,
+  JobPosting,
 } from '@/lib/api-client';
 
 const PAGE_SIZE = 10;
-
-function toEligibilityStatuses(eligibility: JobFilterValues['eligibility']): EligibilityStatus[] | undefined {
-  if (eligibility === 'ELIGIBLE') return ['ELIGIBLE', 'PARTIALLY_ELIGIBLE'];
-  if (eligibility === 'NOT_ELIGIBLE') return ['NOT_ELIGIBLE'];
-  return undefined;
-}
 
 interface QuickFilter {
   createdAfter?: string;
@@ -37,7 +30,6 @@ interface QuickFilter {
 
 function toApiParams(filters: JobFilterValues, page: number, quickFilter: QuickFilter | null) {
   return {
-    statuses: toEligibilityStatuses(filters.eligibility),
     kpssScoreType: filters.kpssScoreType || undefined,
     minKpssScore: filters.minKpssScore ? Number(filters.minKpssScore) : undefined,
     maxKpssScore: filters.maxKpssScore ? Number(filters.maxKpssScore) : undefined,
@@ -78,7 +70,7 @@ function AllJobPostingsContent() {
   const { accessToken } = useAuth();
   const searchParams = useSearchParams();
   const [cities, setCities] = useState<City[]>([]);
-  const [matches, setMatches] = useState<MatchedJobPosting[]>([]);
+  const [jobs, setJobs] = useState<JobPosting[]>([]);
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
@@ -113,12 +105,11 @@ function AllJobPostingsContent() {
   };
 
   const fetchJobs = async (targetPage: number) => {
-    if (!accessToken) return;
     setIsLoading(true);
     setError(null);
     try {
-      const result = await matchesApi.list(toApiParams(filters, targetPage, quickFilter), accessToken);
-      setMatches(result.items);
+      const result = await jobPostingsApi.list(toApiParams(filters, targetPage, quickFilter));
+      setJobs(result.items);
       setPage(result.page);
       setTotalCount(result.totalCount);
       setTotalPages(result.totalPages);
@@ -134,10 +125,9 @@ function AllJobPostingsContent() {
   };
 
   useEffect(() => {
-    if (!accessToken) return;
     fetchJobs(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [accessToken, quickFilter]);
+  }, [quickFilter]);
 
   return (
     <div className="space-y-6">
@@ -181,7 +171,6 @@ function AllJobPostingsContent() {
             setFilters(EMPTY_JOB_FILTERS);
             setTimeout(() => fetchJobs(1), 0);
           }}
-          showEligibilityFilter
         />
 
         <div className="space-y-4">
@@ -205,18 +194,17 @@ function AllJobPostingsContent() {
                   Tekrar Dene
                 </button>
               </div>
-            ) : matches.length === 0 ? (
+            ) : jobs.length === 0 ? (
               <p className="py-10 text-center text-sm text-slate-500">
                 Arama kriterlerinize uygun ilan bulunamadı.
               </p>
             ) : (
-              matches.map((match) => (
+              jobs.map((job) => (
                 <JobPostingCard
-                  key={match.jobPosting.id}
-                  job={match.jobPosting}
-                  city={match.jobPosting.cityId ? cityMap.get(match.jobPosting.cityId) : undefined}
-                  eligibilityStatus={match.status}
-                  isFavorite={favoriteIds.has(match.jobPosting.id)}
+                  key={job.id}
+                  job={job}
+                  city={job.cityId ? cityMap.get(job.cityId) : undefined}
+                  isFavorite={favoriteIds.has(job.id)}
                   onFavoriteChange={handleFavoriteChange}
                 />
               ))

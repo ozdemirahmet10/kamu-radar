@@ -390,6 +390,8 @@ export interface ListJobPostingsParams {
   minimumEducationLevel?: EducationLevel;
   keyword?: string;
   hasPdf?: boolean;
+  createdAfter?: string;
+  deadlineWithinDays?: number;
   page?: number;
   pageSize?: number;
 }
