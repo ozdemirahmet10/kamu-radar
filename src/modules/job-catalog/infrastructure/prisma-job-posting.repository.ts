@@ -245,6 +245,17 @@ export class PrismaJobPostingRepository implements IJobPostingRepository {
     return records.map((record) => this.toDomain(record));
   }
 
+  async findPublishedWithPastDeadline(referenceDate: Date): Promise<JobPosting[]> {
+    const records = await this.prisma.jobPosting.findMany({
+      where: {
+        status: 'PUBLISHED',
+        applicationEndDate: { lt: referenceDate },
+      },
+      include: INCLUDE,
+    });
+    return records.map((record) => this.toDomain(record));
+  }
+
   async findActiveForInstitutionAggregation(
     referenceDate: Date,
   ): Promise<InstitutionAggregationRow[]> {

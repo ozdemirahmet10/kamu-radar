@@ -60,6 +60,8 @@ export interface IJobPostingRepository {
   save(jobPosting: JobPosting, versionChangeReason?: string): Promise<void>;
   /** Son başvuru tarihi geçmiş ve hâlâ arşivlenmiş bir PDF'i olan ilanlar (temizlik işi için). */
   findExpiredWithPdf(referenceDate: Date): Promise<JobPosting[]>;
+  /** Son başvuru tarihi geçmiş ama hâlâ PUBLISHED durumunda kalan ilanlar (durum güncelleme işi için). */
+  findPublishedWithPastDeadline(referenceDate: Date): Promise<JobPosting[]>;
   /** Kurumlar sayfası için — hâlâ aktif (yayında, süresi geçmemiş) ilanların kurum bazlı ham satırları. */
   findActiveForInstitutionAggregation(referenceDate: Date): Promise<InstitutionAggregationRow[]>;
   /** Takip edilen kurum bildirimleri için — belirtilen kurumlardan, belirtilen tarihten sonra yayınlanan ilanlar. */

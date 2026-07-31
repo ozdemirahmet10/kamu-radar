@@ -134,6 +134,11 @@ export class JobPosting extends Entity<string> {
     this.props.updatedAt = new Date();
   }
 
+  expire(): void {
+    this.props.status = JobPostingStatus.EXPIRED;
+    this.props.updatedAt = new Date();
+  }
+
   setPdfStorageKey(key: string | null): void {
     this.props.pdfStorageKey = key;
     this.props.updatedAt = new Date();
