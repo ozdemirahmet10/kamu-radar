@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
@@ -17,12 +18,12 @@ import {
   ShieldCheck,
   User,
 } from 'lucide-react';
-
-const DONATION_URL = process.env.NEXT_PUBLIC_DONATION_URL;
 import { cn } from '@/lib/utils';
 import { Logo } from '@/components/ui/logo';
 import { useAuth } from '@/lib/auth-context';
 import { useNotificationCount } from '@/lib/notification-count-context';
+
+const DONATION_URL = process.env.NEXT_PUBLIC_DONATION_URL;
 
 const NAV_ITEMS = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -42,6 +43,7 @@ export function Sidebar() {
   const router = useRouter();
   const { logout, user, viewAsAdmin } = useAuth();
   const { unreadCount: unreadNotificationCount } = useNotificationCount();
+  const [showDonationNotice, setShowDonationNotice] = useState(false);
 
   const handleLogout = async () => {
     await logout();
@@ -97,7 +99,7 @@ export function Sidebar() {
         </button>
       )}
 
-      {DONATION_URL && (
+      {DONATION_URL ? (
         <a
           href={DONATION_URL}
           target="_blank"
@@ -107,6 +109,22 @@ export function Sidebar() {
           <Heart size={18} />
           Bizi Destekleyin
         </a>
+      ) : (
+        <div className="relative mt-4">
+          <button
+            type="button"
+            onClick={() => setShowDonationNotice((prev) => !prev)}
+            className="flex w-full items-center gap-3 rounded-xl border border-danger-100 bg-danger-50/60 px-3 py-2.5 text-sm font-medium text-danger-700 hover:bg-danger-50"
+          >
+            <Heart size={18} />
+            Bizi Destekleyin
+          </button>
+          {showDonationNotice && (
+            <div className="absolute bottom-12 left-0 w-56 rounded-xl border border-slate-100 bg-white p-3 text-xs text-slate-500 shadow-card">
+              Bağış özelliği yakında açılacak.
+            </div>
+          )}
+        </div>
       )}
 
       <button

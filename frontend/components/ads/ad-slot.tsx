@@ -1,11 +1,13 @@
 'use client';
 
 import { useEffect } from 'react';
+import { Megaphone } from 'lucide-react';
 
 /**
- * Google AdSense reklam alanı. NEXT_PUBLIC_ADSENSE_CLIENT_ID ayarlanmadığı
- * sürece hiçbir şey render etmez — böylece gerçek AdSense hesabı onaylanana
- * kadar kullanıcıya boş/kırık bir reklam kutusu gösterilmez.
+ * Google AdSense reklam alanı. NEXT_PUBLIC_ADSENSE_CLIENT_ID ayarlanana kadar
+ * gerçek reklam yerine "Bu alana reklam verebilirsiniz" yer tutucusu gösterir
+ * — böylece alanların konumu görülebilir, ama gerçek kullanıcıya boş/kırık
+ * bir AdSense kutusu gitmez.
  *
  * Yerleşim kuralı: bu bileşen yalnızca ilan/eşleşme verisinin ALTINA veya
  * filtre panelinin altına konur — hiçbir zaman ilan listesinin arasına ya da
@@ -25,7 +27,16 @@ export function AdSlot({ slot, className }: { slot: string; className?: string }
     }
   }, [clientId]);
 
-  if (!clientId) return null;
+  if (!clientId) {
+    return (
+      <div
+        className={`flex min-h-[90px] flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-center ${className ?? ''}`}
+      >
+        <Megaphone size={18} className="text-slate-300" />
+        <p className="text-xs font-medium text-slate-400">Bu alana reklam verebilirsiniz</p>
+      </div>
+    );
+  }
 
   return (
     <ins
