@@ -13,6 +13,7 @@ import {
   Loader2,
   Megaphone,
   Sparkles,
+  X,
 } from 'lucide-react';
 import { DashboardShell } from '@/components/dashboard/dashboard-shell';
 import { Card } from '@/components/ui/card';
@@ -28,6 +29,7 @@ import {
   jobPostingsApi,
   matchesApi,
   profileApi,
+  radarInsightApi,
   City,
   EligibilityStatus,
   Institution,
@@ -128,8 +130,27 @@ function DashboardContent() {
   const [addedTodayCount, setAddedTodayCount] = useState(0);
   const [deadlineSoonCount, setDeadlineSoonCount] = useState(0);
   const [institutionSuggestions, setInstitutionSuggestions] = useState<Institution[]>([]);
+  const [isRadarOpen, setIsRadarOpen] = useState(false);
+  const [isRadarLoading, setIsRadarLoading] = useState(false);
+  const [radarInsight, setRadarInsight] = useState<string | null>(null);
+  const [radarError, setRadarError] = useState<string | null>(null);
 
   const cityMap = useMemo(() => new Map(cities.map((city) => [city.id, city])), [cities]);
+
+  const handleOpenRadarInsight = async () => {
+    setIsRadarOpen(true);
+    if (!accessToken || isRadarLoading) return;
+    setIsRadarLoading(true);
+    setRadarError(null);
+    try {
+      const result = await radarInsightApi.get(accessToken);
+      setRadarInsight(result.insight);
+    } catch {
+      setRadarError('İçgörü oluşturulamadı, lütfen tekrar deneyin.');
+    } finally {
+      setIsRadarLoading(false);
+    }
+  };
 
   const handleFavoriteChange = (jobPostingId: string, isFavorite: boolean) => {
     setFavoriteIds((prev) => {
@@ -223,7 +244,7 @@ function DashboardContent() {
           </h1>
           <p className="mt-1 text-sm capitalize text-slate-500">Bugün {today}</p>
         </div>
-        <Button className="gap-2">
+        <Button className="gap-2" onClick={handleOpenRadarInsight}>
           <Sparkles size={18} />
           Radar AI
         </Button>
@@ -451,6 +472,48 @@ function DashboardContent() {
           </div>
         )}
       </Card>
+
+      {isRadarOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4"
+          onClick={() => setIsRadarOpen(false)}
+        >
+          <div
+            className="w-full max-w-md rounded-2xl bg-white p-6 shadow-card"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="flex items-center gap-2 text-base font-semibold text-slate-900">
+                <Sparkles size={18} className="text-brand-600" />
+                Radar AI
+              </h2>
+              <button
+                type="button"
+                onClick={() => setIsRadarOpen(false)}
+                className="text-slate-400 hover:text-slate-600"
+                aria-label="Kapat"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="mt-4">
+              {isRadarLoading ? (
+                <div className="flex flex-col items-center gap-2 py-8">
+                  <Loader2 className="animate-spin text-brand-600" size={24} />
+                  <p className="text-xs text-slate-500">Profiliniz değerlendiriliyor...</p>
+                </div>
+              ) : radarError ? (
+                <p className="py-4 text-sm text-danger-600">{radarError}</p>
+              ) : (
+                <p className="whitespace-pre-line text-sm leading-relaxed text-slate-700">
+                  {radarInsight}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

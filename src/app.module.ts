@@ -19,6 +19,7 @@ import { BackupModule } from './modules/backup/backup.module';
 import { InstitutionFollowsModule } from './modules/institution-follows/institution-follows.module';
 import { MatchFeedbackModule } from './modules/match-feedback/match-feedback.module';
 import { SupportModule } from './modules/support/support.module';
+import { AiInsightsModule } from './modules/ai-insights/ai-insights.module';
 import { HealthController } from './common/controllers/health.controller';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { ResponseEnvelopeInterceptor } from './common/interceptors/response-envelope.interceptor';
@@ -55,6 +56,7 @@ import { MetricsModule } from './common/metrics/metrics.module';
     InstitutionFollowsModule,
     MatchFeedbackModule,
     SupportModule,
+    AiInsightsModule,
   ],
   controllers: [HealthController],
   providers: [

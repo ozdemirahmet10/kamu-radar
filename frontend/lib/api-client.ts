@@ -597,6 +597,15 @@ export const supportRequestsApi = {
     }),
 };
 
+export interface RadarInsight {
+  insight: string;
+  generatedAt: string;
+}
+
+export const radarInsightApi = {
+  get: (accessToken: string) => apiFetch<RadarInsight>('/me/radar-insight', { accessToken }),
+};
+
 export type NotificationType = 'NEW_MATCH' | 'DEADLINE_SOON' | 'NEW_FROM_FOLLOWED_INSTITUTION';
 
 export interface NotificationRecord {
