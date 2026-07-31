@@ -22,6 +22,7 @@ import { cn } from '@/lib/utils';
 import { Logo } from '@/components/ui/logo';
 import { useAuth } from '@/lib/auth-context';
 import { useNotificationCount } from '@/lib/notification-count-context';
+import { AdSlot } from '@/components/ads/ad-slot';
 
 const DONATION_URL = process.env.NEXT_PUBLIC_DONATION_URL;
 
@@ -61,7 +62,7 @@ export function Sidebar() {
         <Logo />
       </div>
 
-      <nav className="mt-8 flex-1 space-y-1 overflow-y-auto">
+      <nav className="mt-8 flex flex-1 flex-col space-y-1 overflow-y-auto">
         {NAV_ITEMS.map((item) => {
           const isActive = pathname === item.href;
           const Icon = item.icon;
@@ -87,6 +88,8 @@ export function Sidebar() {
             </Link>
           );
         })}
+
+        <AdSlot slot="sidebar-vertical" className="flex-1" />
       </nav>
 
       {(user?.role === 'ADMIN' || user?.role === 'MODERATOR') && (
