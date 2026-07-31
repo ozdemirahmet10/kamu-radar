@@ -1,13 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Bell, CalendarClock, ChevronDown, Loader2, Search, Sparkles, Sun } from 'lucide-react';
 import { Avatar } from '@/components/ui/avatar';
 import { useAuth } from '@/lib/auth-context';
 import { useNotificationCount } from '@/lib/notification-count-context';
-import { notificationsApi, NotificationRecord } from '@/lib/api-client';
+import { notificationsApi, jobPostingsApi, NotificationRecord, JobPosting } from '@/lib/api-client';
+
+const SEARCH_DEBOUNCE_MS = 300;
+const SEARCH_MIN_LENGTH = 2;
 
 function timeAgo(iso: string): string {
   const diffMs = Date.now() - new Date(iso).getTime();
@@ -28,6 +31,46 @@ export function Topbar() {
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isNotifLoading, setIsNotifLoading] = useState(false);
   const [recentNotifications, setRecentNotifications] = useState<NotificationRecord[]>([]);
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isSearchLoading, setIsSearchLoading] = useState(false);
+  const [searchResults, setSearchResults] = useState<JobPosting[]>([]);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const trimmed = searchQuery.trim();
+    if (trimmed.length < SEARCH_MIN_LENGTH) {
+      setSearchResults([]);
+      setIsSearchLoading(false);
+      return;
+    }
+    setIsSearchLoading(true);
+    const timeout = setTimeout(() => {
+      jobPostingsApi
+        .list({ keyword: trimmed, pageSize: 6 })
+        .then((result) => setSearchResults(result.items))
+        .catch(() => setSearchResults([]))
+        .finally(() => setIsSearchLoading(false));
+    }, SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(timeout);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target as Node)) {
+        setIsSearchOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleSearchResultClick = (jobPostingId: string) => {
+    setIsSearchOpen(false);
+    setSearchQuery('');
+    router.push(`/dashboard/ilanlar/${jobPostingId}`);
+  };
 
   if (!user) return null;
 
@@ -60,13 +103,51 @@ export function Topbar() {
 
   return (
     <header className="flex items-center gap-4 border-b border-slate-100 bg-white px-8 py-4">
-      <div className="relative w-full max-w-xl">
+      <div ref={searchContainerRef} className="relative w-full max-w-xl">
         <Search size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
         <input
           type="search"
+          value={searchQuery}
+          onChange={(e) => {
+            setSearchQuery(e.target.value);
+            setIsSearchOpen(true);
+          }}
+          onFocus={() => setIsSearchOpen(true)}
           placeholder="Kurum, şehir, kadro veya ilan ara..."
           className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-11 pr-4 text-sm placeholder:text-slate-400 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-100"
         />
+
+        {isSearchOpen && searchQuery.trim().length >= SEARCH_MIN_LENGTH && (
+          <div className="absolute left-0 top-12 w-full rounded-xl border border-slate-100 bg-white p-1.5 shadow-card">
+            {isSearchLoading ? (
+              <div className="flex justify-center py-6">
+                <Loader2 className="animate-spin text-brand-600" size={20} />
+              </div>
+            ) : searchResults.length === 0 ? (
+              <p className="px-3 py-6 text-center text-xs text-slate-500">
+                &quot;{searchQuery.trim()}&quot; için sonuç bulunamadı.
+              </p>
+            ) : (
+              <div className="max-h-96 overflow-y-auto">
+                {searchResults.map((job) => (
+                  <button
+                    key={job.id}
+                    type="button"
+                    onClick={() => handleSearchResultClick(job.id)}
+                    className="block w-full rounded-lg px-3 py-2 text-left hover:bg-slate-50"
+                  >
+                    <span className="block truncate text-sm font-medium text-slate-900">
+                      {job.positionTitle}
+                    </span>
+                    <span className="block truncate text-xs text-slate-500">
+                      {job.institutionName}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="ml-auto flex items-center gap-3">
