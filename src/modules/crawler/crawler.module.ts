@@ -17,6 +17,7 @@ import { ClaudeExtractionService } from './infrastructure/extraction/claude-extr
 import { HybridExtractionService } from './infrastructure/extraction/hybrid-extraction.service';
 import { SbbKamuIlanAdapter } from './infrastructure/adapters/sbb-kamu-ilan.adapter';
 import { IlanGovTrAdapter } from './infrastructure/adapters/ilan-gov-tr.adapter';
+import { KariyerKapisiAdapter } from './infrastructure/adapters/kariyer-kapisi.adapter';
 import { CRAWL_QUEUE_NAME } from './infrastructure/queue/crawl-queue.constants';
 import { CrawlProcessor } from './infrastructure/queue/crawl.processor';
 import { CrawlSchedulerService } from './infrastructure/queue/crawl-scheduler.service';
@@ -53,15 +54,21 @@ import { JobPostingPdfController } from './presentation/controllers/job-posting-
     ClaudeExtractionService,
     SbbKamuIlanAdapter,
     IlanGovTrAdapter,
+    KariyerKapisiAdapter,
     {
       provide: SOURCE_ADAPTER_REGISTRY,
-      useFactory: (sbbAdapter: ISourceAdapter, ilanGovTrAdapter: ISourceAdapter) => {
+      useFactory: (
+        sbbAdapter: ISourceAdapter,
+        ilanGovTrAdapter: ISourceAdapter,
+        kariyerKapisiAdapter: ISourceAdapter,
+      ) => {
         const registry = new Map<string, ISourceAdapter>();
         registry.set(sbbAdapter.adapterKey, sbbAdapter);
         registry.set(ilanGovTrAdapter.adapterKey, ilanGovTrAdapter);
+        registry.set(kariyerKapisiAdapter.adapterKey, kariyerKapisiAdapter);
         return registry;
       },
-      inject: [SbbKamuIlanAdapter, IlanGovTrAdapter],
+      inject: [SbbKamuIlanAdapter, IlanGovTrAdapter, KariyerKapisiAdapter],
     },
     RunCrawlForSourceUseCase,
     GetJobPostingPdfUseCase,
