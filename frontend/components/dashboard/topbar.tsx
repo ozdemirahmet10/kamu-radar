@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Bell, CalendarClock, ChevronDown, Loader2, Search, Sparkles, Sun } from 'lucide-react';
+import { Bell, CalendarClock, ChevronDown, Loader2, Search, Sparkles } from 'lucide-react';
 import { Avatar } from '@/components/ui/avatar';
 import { useAuth } from '@/lib/auth-context';
 import { useNotificationCount } from '@/lib/notification-count-context';
@@ -27,7 +27,6 @@ export function Topbar() {
   const router = useRouter();
   const { unreadCount: unreadNotificationCount, decrementUnreadCount } = useNotificationCount();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [themeNotice, setThemeNotice] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isNotifLoading, setIsNotifLoading] = useState(false);
   const [recentNotifications, setRecentNotifications] = useState<NotificationRecord[]>([]);
@@ -229,19 +228,6 @@ export function Topbar() {
           )}
         </div>
 
-        <div className="relative">
-          <button
-            onClick={() => setThemeNotice((prev) => !prev)}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-50 text-slate-500 hover:bg-slate-100"
-          >
-            <Sun size={18} />
-          </button>
-          {themeNotice && (
-            <div className="absolute right-0 top-12 w-44 rounded-xl border border-slate-100 bg-white p-3 text-xs text-slate-500 shadow-card">
-              Karanlık tema yakında eklenecek.
-            </div>
-          )}
-        </div>
 
         <div className="relative">
           <button
