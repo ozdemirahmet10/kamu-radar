@@ -25,7 +25,11 @@ import {
   MATCH_RESULT_REPOSITORY,
 } from '../../domain/repositories/match-result.repository.interface';
 
-const MAX_CANDIDATE_POSTINGS = 200;
+// İlan sayısı bu sınırı aşarsa (crawler kaynak sayısı arttıkça artıyor), sınırın
+// ötesindeki ilanlar sayfalamada hiç görünmez hale gelir — uygunluk hesaplaması ucuz
+// (saf alan karşılaştırması, LLM çağrısı yok) olduğundan sınır cömert tutulabilir;
+// katalog on binlere ulaşırsa gerçek DB-taraflı sayfalamaya geçilmesi gerekir.
+const MAX_CANDIDATE_POSTINGS = 3000;
 
 export interface MatchedJobPosting {
   jobPosting: JobPosting;
