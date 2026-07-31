@@ -31,6 +31,15 @@ import {
 // katalog on binlere ulaşırsa gerçek DB-taraflı sayfalamaya geçilmesi gerekir.
 const MAX_CANDIDATE_POSTINGS = 3000;
 
+export const MATCHES_SORT_BY_VALUES = [
+  'matchPercentage',
+  'newest',
+  'oldest',
+  'deadlineSoon',
+  'quotaHigh',
+] as const;
+export type MatchesSortBy = (typeof MATCHES_SORT_BY_VALUES)[number];
+
 export interface MatchedJobPosting {
   jobPosting: JobPosting;
   status: EligibilityStatus;
@@ -52,6 +61,7 @@ export interface GetMyMatchesInput {
   hasPdf?: boolean;
   createdAfter?: Date;
   deadlineWithinDays?: number;
+  sortBy?: MatchesSortBy;
   page: number;
   pageSize: number;
 }
@@ -63,6 +73,38 @@ export interface GetMyMatchesResult {
   totalCount: number;
   totalPages: number;
   statusCounts: Record<EligibilityStatus, number>;
+}
+
+function sortMatches(matches: MatchedJobPosting[], sortBy: MatchesSortBy): void {
+  switch (sortBy) {
+    case 'newest':
+      matches.sort(
+        (a, b) => b.jobPosting.snapshot.createdAt.getTime() - a.jobPosting.snapshot.createdAt.getTime(),
+      );
+      break;
+    case 'oldest':
+      matches.sort(
+        (a, b) => a.jobPosting.snapshot.createdAt.getTime() - b.jobPosting.snapshot.createdAt.getTime(),
+      );
+      break;
+    case 'deadlineSoon':
+      matches.sort((a, b) => {
+        const aEnd = a.jobPosting.snapshot.applicationWindow.endDate;
+        const bEnd = b.jobPosting.snapshot.applicationWindow.endDate;
+        if (!aEnd && !bEnd) return 0;
+        if (!aEnd) return 1;
+        if (!bEnd) return -1;
+        return aEnd.getTime() - bEnd.getTime();
+      });
+      break;
+    case 'quotaHigh':
+      matches.sort((a, b) => (b.jobPosting.snapshot.quotaCount ?? 0) - (a.jobPosting.snapshot.quotaCount ?? 0));
+      break;
+    case 'matchPercentage':
+    default:
+      matches.sort((a, b) => b.matchPercentage - a.matchPercentage);
+      break;
+  }
 }
 
 function toJobRequirements(jobPosting: JobPosting, knownCodes: Set<string>): JobRequirements {
@@ -172,7 +214,7 @@ export class GetMyMatchesUseCase {
       ? allMatches.filter((match) => input.statuses!.includes(match.status))
       : allMatches;
 
-    filtered.sort((a, b) => b.matchPercentage - a.matchPercentage);
+    sortMatches(filtered, input.sortBy ?? 'matchPercentage');
 
     const totalCount = filtered.length;
     const totalPages = Math.max(1, Math.ceil(totalCount / input.pageSize));

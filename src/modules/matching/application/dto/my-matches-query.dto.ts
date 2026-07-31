@@ -5,6 +5,7 @@ import {
   IsBoolean,
   IsDate,
   IsEnum,
+  IsIn,
   IsInt,
   IsNumber,
   IsOptional,
@@ -13,6 +14,7 @@ import {
   Max,
   Min,
 } from 'class-validator';
+import { MatchesSortBy, MATCHES_SORT_BY_VALUES } from '../use-cases/get-my-matches.use-case';
 import { EligibilityStatus } from '../../domain/entities/eligibility-result';
 import {
   EducationLevel,
@@ -111,4 +113,9 @@ export class MyMatchesQueryDto {
   @Min(1)
   @Max(50)
   pageSize?: number;
+
+  @ApiPropertyOptional({ enum: MATCHES_SORT_BY_VALUES, default: 'matchPercentage' })
+  @IsOptional()
+  @IsIn(MATCHES_SORT_BY_VALUES)
+  sortBy?: MatchesSortBy;
 }

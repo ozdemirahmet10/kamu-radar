@@ -34,6 +34,7 @@ export class MeMatchesController {
       hasPdf: query.hasPdf,
       createdAfter: query.createdAfter,
       deadlineWithinDays: query.deadlineWithinDays,
+      sortBy: query.sortBy,
       page: query.page ?? 1,
       pageSize: query.pageSize ?? 10,
     });

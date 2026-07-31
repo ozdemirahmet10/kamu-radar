@@ -18,9 +18,18 @@ import {
   City,
   EligibilityStatus,
   MatchedJobPosting,
+  MatchesSortBy,
 } from '@/lib/api-client';
 
 const PAGE_SIZE = 10;
+
+const SORT_OPTIONS: { value: MatchesSortBy; label: string }[] = [
+  { value: 'matchPercentage', label: 'Uygunluk (Yüksekten Düşüğe)' },
+  { value: 'newest', label: 'Tarih (Yeniden Eskiye)' },
+  { value: 'oldest', label: 'Tarih (Eskiden Yeniye)' },
+  { value: 'deadlineSoon', label: 'Son Başvuru (Yakından Uzağa)' },
+  { value: 'quotaHigh', label: 'Kontenjan (Çoktan Aza)' },
+];
 
 function toEligibilityStatuses(eligibility: JobFilterValues['eligibility']): EligibilityStatus[] | undefined {
   if (eligibility === 'ELIGIBLE') return ['ELIGIBLE', 'PARTIALLY_ELIGIBLE'];
@@ -35,7 +44,12 @@ interface QuickFilter {
   label: string;
 }
 
-function toApiParams(filters: JobFilterValues, page: number, quickFilter: QuickFilter | null) {
+function toApiParams(
+  filters: JobFilterValues,
+  page: number,
+  quickFilter: QuickFilter | null,
+  sortBy: MatchesSortBy,
+) {
   return {
     statuses: toEligibilityStatuses(filters.eligibility),
     kpssScoreType: filters.kpssScoreType || undefined,
@@ -49,6 +63,7 @@ function toApiParams(filters: JobFilterValues, page: number, quickFilter: QuickF
     createdAfter: quickFilter?.createdAfter,
     deadlineWithinDays: quickFilter?.deadlineWithinDays,
     keyword: quickFilter?.keyword,
+    sortBy,
     page,
     pageSize: PAGE_SIZE,
   };
@@ -84,6 +99,7 @@ function AllJobPostingsContent() {
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [filters, setFilters] = useState<JobFilterValues>(EMPTY_JOB_FILTERS);
+  const [sortBy, setSortBy] = useState<MatchesSortBy>('matchPercentage');
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
 
@@ -117,7 +133,10 @@ function AllJobPostingsContent() {
     setIsLoading(true);
     setError(null);
     try {
-      const result = await matchesApi.list(toApiParams(filters, targetPage, quickFilter), accessToken);
+      const result = await matchesApi.list(
+        toApiParams(filters, targetPage, quickFilter, sortBy),
+        accessToken,
+      );
       setMatches(result.items);
       setPage(result.page);
       setTotalCount(result.totalCount);
@@ -137,7 +156,7 @@ function AllJobPostingsContent() {
     if (!accessToken) return;
     fetchJobs(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [accessToken, quickFilter]);
+  }, [accessToken, quickFilter, sortBy]);
 
   return (
     <div className="space-y-6">
@@ -150,10 +169,15 @@ function AllJobPostingsContent() {
         </div>
         <div className="flex items-center gap-3">
           <select
-            defaultValue="newest"
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as MatchesSortBy)}
             className="rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-700 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
           >
-            <option value="newest">Tarih (Yeniden Eskiye)</option>
+            {SORT_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
           </select>
         </div>
       </div>

@@ -434,6 +434,8 @@ export interface MyMatchesListResponse {
   statusCounts: Record<EligibilityStatus, number>;
 }
 
+export type MatchesSortBy = 'matchPercentage' | 'newest' | 'oldest' | 'deadlineSoon' | 'quotaHigh';
+
 export interface GetMyMatchesParams {
   statuses?: EligibilityStatus[];
   cityId?: string;
@@ -447,6 +449,7 @@ export interface GetMyMatchesParams {
   hasPdf?: boolean;
   createdAfter?: string;
   deadlineWithinDays?: number;
+  sortBy?: MatchesSortBy;
   page?: number;
   pageSize?: number;
 }
@@ -467,6 +470,7 @@ export const matchesApi = {
         hasPdf: params.hasPdf,
         createdAfter: params.createdAfter,
         deadlineWithinDays: params.deadlineWithinDays,
+        sortBy: params.sortBy,
         page: params.page,
         pageSize: params.pageSize,
       })}`,
