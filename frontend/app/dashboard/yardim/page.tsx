@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { DashboardShell } from '@/components/dashboard/dashboard-shell';
 import { Card } from '@/components/ui/card';
+import { AdSlot } from '@/components/ads/ad-slot';
 import { useAuth } from '@/lib/auth-context';
 import { ApiError, supportRequestsApi, SupportRequestType } from '@/lib/api-client';
 
@@ -412,6 +413,8 @@ export default function HelpCenterPage() {
             </Card>
           </div>
         </div>
+
+        <AdSlot slot="yardim-bottom" />
       </div>
     </DashboardShell>
   );

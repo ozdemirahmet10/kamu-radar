@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Pagination } from '@/components/dashboard/pagination';
 import { MatchedJobItem } from '@/components/dashboard/matched-job-item';
 import { EMPTY_JOB_FILTERS, JobFilterValues, JobFiltersPanel } from '@/components/dashboard/job-filters-panel';
+import { AdSlot } from '@/components/ads/ad-slot';
 import { useAuth } from '@/lib/auth-context';
 import {
   ApiError,
@@ -192,16 +193,19 @@ function MatchedJobsContent() {
           />
         </div>
 
-        <JobFiltersPanel
-          cities={cities}
-          values={filters}
-          onChange={(patch) => setFilters((prev) => ({ ...prev, ...patch }))}
-          onSubmit={() => fetchMatches(1, filters)}
-          onClear={() => {
-            setFilters(EMPTY_JOB_FILTERS);
-            fetchMatches(1, EMPTY_JOB_FILTERS);
-          }}
-        />
+        <div className="space-y-4">
+          <JobFiltersPanel
+            cities={cities}
+            values={filters}
+            onChange={(patch) => setFilters((prev) => ({ ...prev, ...patch }))}
+            onSubmit={() => fetchMatches(1, filters)}
+            onClear={() => {
+              setFilters(EMPTY_JOB_FILTERS);
+              fetchMatches(1, EMPTY_JOB_FILTERS);
+            }}
+          />
+          <AdSlot slot="uygun-ilanlar-sidebar" />
+        </div>
       </div>
     </div>
   );

@@ -7,6 +7,7 @@ import {
   Bookmark,
   ClipboardList,
   FileText,
+  Heart,
   HelpCircle,
   LayoutDashboard,
   ListChecks,
@@ -16,6 +17,8 @@ import {
   ShieldCheck,
   User,
 } from 'lucide-react';
+
+const DONATION_URL = process.env.NEXT_PUBLIC_DONATION_URL;
 import { cn } from '@/lib/utils';
 import { Logo } from '@/components/ui/logo';
 import { useAuth } from '@/lib/auth-context';
@@ -94,9 +97,21 @@ export function Sidebar() {
         </button>
       )}
 
+      {DONATION_URL && (
+        <a
+          href={DONATION_URL}
+          target="_blank"
+          rel="noreferrer"
+          className="mt-4 flex items-center gap-3 rounded-xl border border-danger-100 bg-danger-50/60 px-3 py-2.5 text-sm font-medium text-danger-700 hover:bg-danger-50"
+        >
+          <Heart size={18} />
+          Bizi Destekleyin
+        </a>
+      )}
+
       <button
         onClick={handleLogout}
-        className="mt-4 flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-500 hover:bg-slate-50 hover:text-danger-600"
+        className="mt-2 flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-500 hover:bg-slate-50 hover:text-danger-600"
       >
         <LogOut size={18} />
         Çıkış Yap

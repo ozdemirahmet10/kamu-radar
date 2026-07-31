@@ -21,6 +21,7 @@ import { Button } from '@/components/ui/button';
 import { ProgressRing } from '@/components/ui/progress-ring';
 import { StatCard } from '@/components/dashboard/stat-card';
 import { JobPostingCard } from '@/components/dashboard/job-posting-card';
+import { AdSlot } from '@/components/ads/ad-slot';
 import { useAuth } from '@/lib/auth-context';
 import {
   citiesApi,
@@ -472,6 +473,8 @@ function DashboardContent() {
           </div>
         )}
       </Card>
+
+      <AdSlot slot="dashboard-bottom" />
 
       {isRadarOpen && (
         <div

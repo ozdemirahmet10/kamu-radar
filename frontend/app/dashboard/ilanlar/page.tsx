@@ -8,6 +8,7 @@ import { DashboardShell } from '@/components/dashboard/dashboard-shell';
 import { Card } from '@/components/ui/card';
 import { JobPostingCard } from '@/components/dashboard/job-posting-card';
 import { Pagination } from '@/components/dashboard/pagination';
+import { AdSlot } from '@/components/ads/ad-slot';
 import { EMPTY_JOB_FILTERS, JobFilterValues, JobFiltersPanel } from '@/components/dashboard/job-filters-panel';
 import { useAuth } from '@/lib/auth-context';
 import {
@@ -196,17 +197,20 @@ function AllJobPostingsContent() {
       )}
 
       <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
-        <JobFiltersPanel
-          cities={cities}
-          values={filters}
-          onChange={(patch) => setFilters((prev) => ({ ...prev, ...patch }))}
-          onSubmit={() => fetchJobs(1)}
-          onClear={() => {
-            setFilters(EMPTY_JOB_FILTERS);
-            setTimeout(() => fetchJobs(1), 0);
-          }}
-          showEligibilityFilter
-        />
+        <div className="space-y-4">
+          <JobFiltersPanel
+            cities={cities}
+            values={filters}
+            onChange={(patch) => setFilters((prev) => ({ ...prev, ...patch }))}
+            onSubmit={() => fetchJobs(1)}
+            onClear={() => {
+              setFilters(EMPTY_JOB_FILTERS);
+              setTimeout(() => fetchJobs(1), 0);
+            }}
+            showEligibilityFilter
+          />
+          <AdSlot slot="ilanlar-sidebar" />
+        </div>
 
         <div className="space-y-4">
           <p className="text-sm font-medium text-slate-500">
