@@ -11,10 +11,21 @@ async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
 
   const configService = app.get(AppConfigService);
+  const corsOrigin = configService.get('CORS_ORIGIN');
+
+  // credentials:true ile birlikte "*" (joker) origin, tarayıcıların çoğu tarafından zaten
+  // reddedilir ama bazı proxy/eski istemci kurulumlarında sessizce çalışabilir — production'da
+  // gerçek frontend origin'i ayarlanmadan yanlışlıkla açık kalmasını engellemek için uygulama
+  // hiç ayağa kalkmadan burada durduruluyor.
+  if (configService.isProduction && corsOrigin === '*') {
+    throw new Error(
+      'CORS_ORIGIN production ortamında "*" olamaz — gerçek frontend adresini ayarlayın (örn. https://kamuradar.com).',
+    );
+  }
 
   app.useLogger(app.get(Logger));
   app.use(helmet());
-  app.enableCors({ origin: configService.get('CORS_ORIGIN'), credentials: true });
+  app.enableCors({ origin: corsOrigin, credentials: true });
   app.setGlobalPrefix(configService.get('API_GLOBAL_PREFIX'));
   app.useGlobalPipes(
     new ValidationPipe({
